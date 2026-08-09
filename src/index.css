@@ -164,6 +164,10 @@ nav button.active {
 .modal {
   position: fixed;
   inset: 0;
+  margin: 0;
+  max-width: none;
+  border: 0;
+  color: var(--fg);
   background: rgba(1, 4, 9, 0.7);
   padding: 40px 20px;
   overflow: auto;
