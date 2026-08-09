@@ -32,3 +32,9 @@ it('shows an error', async () => {
   render(<Torrents api={api} onPick={vi.fn()} />)
   expect(await screen.findByRole('alert')).toHaveTextContent('boom')
 })
+
+it('shows an empty state', async () => {
+  const api = { torrents: vi.fn().mockResolvedValue({ items: [] }) } as unknown as Api
+  render(<Torrents api={api} onPick={vi.fn()} />)
+  expect(await screen.findByText('No torrents')).toBeInTheDocument()
+})

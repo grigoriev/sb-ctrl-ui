@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { type Settings } from '../api'
 
-export function SettingsView({ settings, onSave }: { settings: Settings; onSave: (s: Settings) => void }) {
+export function SettingsView({ settings, onSave }: Readonly<{ settings: Settings; onSave: (s: Settings) => void }>) {
   const [baseUrl, setBaseUrl] = useState(settings.baseUrl)
   const [token, setToken] = useState(settings.token)
 

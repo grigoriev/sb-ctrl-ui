@@ -29,8 +29,18 @@ it('switches between tabs', async () => {
   expect(screen.getByText('Save')).toBeInTheDocument()
 })
 
-it('opens the wizard when a torrent is picked', async () => {
+it('opens and closes the wizard', async () => {
   render(<App />)
   await userEvent.click(await screen.findByText('Movie'))
   expect(await screen.findByRole('dialog')).toBeInTheDocument()
+  await userEvent.click(screen.getByLabelText('Close'))
+  expect(screen.queryByRole('dialog')).toBeNull()
+})
+
+it('saves settings and returns to torrents', async () => {
+  render(<App />)
+  await userEvent.click(screen.getByRole('button', { name: 'Settings' }))
+  await userEvent.type(screen.getByPlaceholderText(/bearer/i), 'tok')
+  await userEvent.click(screen.getByText('Save'))
+  expect(await screen.findByText('Movie')).toBeInTheDocument()
 })

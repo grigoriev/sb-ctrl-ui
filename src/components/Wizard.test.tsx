@@ -16,6 +16,16 @@ const candidates: Candidate[] = [
     is_animation: false,
     kind: 'movie',
   },
+  {
+    tmdb_id: 2,
+    media: 'tv',
+    title: 'Some Toon',
+    original_title: 'Some Toon',
+    year: '',
+    overview: '',
+    is_animation: true,
+    kind: 'other',
+  },
 ]
 
 it('shows candidates and starts a transfer', async () => {
@@ -33,6 +43,12 @@ it('shows no matches', async () => {
   const api = { search: vi.fn().mockResolvedValue({ guess: {}, candidates: [] }) } as unknown as Api
   render(<Wizard api={api} torrent={torrent} onClose={vi.fn()} />)
   expect(await screen.findByText('No TMDb matches')).toBeInTheDocument()
+})
+
+it('reports a search error', async () => {
+  const api = { search: vi.fn().mockRejectedValue(new Error('search boom')) } as unknown as Api
+  render(<Wizard api={api} torrent={torrent} onClose={vi.fn()} />)
+  expect(await screen.findByRole('alert')).toHaveTextContent('search boom')
 })
 
 it('reports a start error and closes', async () => {

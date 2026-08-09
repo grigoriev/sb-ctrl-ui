@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Api, humanSize, type Torrent } from '../api'
 
-export function Torrents({ api, onPick }: { api: Api; onPick: (t: Torrent) => void }) {
+export function Torrents({ api, onPick }: Readonly<{ api: Api; onPick: (t: Torrent) => void }>) {
   const [items, setItems] = useState<Torrent[] | null>(null)
   const [error, setError] = useState('')
   const [filter, setFilter] = useState('')
@@ -35,7 +35,7 @@ export function Torrents({ api, onPick }: { api: Api; onPick: (t: Torrent) => vo
         <ul className="list">
           {shown.map((t) => (
             <li key={t.hash}>
-              <button className="row" onClick={() => onPick(t)}>
+              <button type="button" className="row" onClick={() => onPick(t)}>
                 <span className="title">{t.name}</span>
                 <span className="meta">
                   {humanSize(t.size)} · {t.is_multi ? 'folder' : 'file'} · ↵ send to Plex

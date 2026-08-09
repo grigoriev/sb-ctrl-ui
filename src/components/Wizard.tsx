@@ -8,7 +8,7 @@ const KIND_LABEL: Record<string, string> = {
   cartoon_series: 'Cartoon series',
 }
 
-export function Wizard({ api, torrent, onClose }: { api: Api; torrent: Torrent; onClose: () => void }) {
+export function Wizard({ api, torrent, onClose }: Readonly<{ api: Api; torrent: Torrent; onClose: () => void }>) {
   const [candidates, setCandidates] = useState<Candidate[] | null>(null)
   const [error, setError] = useState('')
   const [started, setStarted] = useState('')
@@ -37,7 +37,7 @@ export function Wizard({ api, torrent, onClose }: { api: Api; torrent: Torrent; 
     <div className="modal" role="dialog" aria-label="Send to Plex">
       <div className="modal-head">
         <h2>{torrent.name}</h2>
-        <button aria-label="Close" onClick={onClose}>
+        <button type="button" aria-label="Close" onClick={onClose}>
           ✕
         </button>
       </div>
@@ -52,7 +52,7 @@ export function Wizard({ api, torrent, onClose }: { api: Api; torrent: Torrent; 
         <ul className="list">
           {candidates.map((c) => (
             <li key={c.tmdb_id}>
-              <button className="row" onClick={() => start(c)}>
+              <button type="button" className="row" onClick={() => start(c)}>
                 <span className="title">{candidateName(c)}</span>
                 <span className="meta">
                   {KIND_LABEL[c.kind] ?? c.kind}
