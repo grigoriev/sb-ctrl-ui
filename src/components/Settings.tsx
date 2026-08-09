@@ -14,11 +14,11 @@ export function SettingsView({ settings, onSave }: Readonly<{ settings: Settings
       }}
     >
       <label>
-        API URL
+        <span>API URL</span>
         <input value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} placeholder="https://beaver.h.g7v.io" />
       </label>
       <label>
-        Token
+        <span>Token</span>
         <input type="password" value={token} onChange={(e) => setToken(e.target.value)} placeholder="bearer token" />
       </label>
       <button type="submit">Save</button>
