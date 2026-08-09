@@ -25,7 +25,7 @@ function App() {
         <h1>sb-ctrl</h1>
         <nav>
           {(['torrents', 'jobs', 'settings'] as Tab[]).map((t) => (
-            <button key={t} className={tab === t ? 'active' : ''} onClick={() => setTab(t)}>
+            <button type="button" key={t} className={tab === t ? 'active' : ''} onClick={() => setTab(t)}>
               {t[0].toUpperCase() + t.slice(1)}
             </button>
           ))}

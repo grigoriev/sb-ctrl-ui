@@ -2,9 +2,10 @@ import '@testing-library/jest-dom'
 
 // jsdom under vitest can start on an opaque origin, where localStorage is
 // undefined. Provide a simple in-memory implementation for tests.
-if (typeof globalThis.localStorage === 'undefined') {
+const withStorage = globalThis as { localStorage?: Storage }
+if (withStorage.localStorage === undefined) {
   const store = new Map<string, string>()
-  globalThis.localStorage = {
+  withStorage.localStorage = {
     getItem: (key: string) => store.get(key) ?? null,
     setItem: (key: string, value: string) => {
       store.set(key, String(value))

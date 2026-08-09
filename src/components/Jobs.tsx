@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Api, type Job } from '../api'
 
-export function Jobs({ api }: { api: Api }) {
+export function Jobs({ api }: Readonly<{ api: Api }>) {
   const [jobs, setJobs] = useState<Job[] | null>(null)
   const [error, setError] = useState('')
 
@@ -37,7 +37,7 @@ export function Jobs({ api }: { api: Api }) {
             {j.error ? ` · ${j.error}` : ''}
           </span>
           {j.state === 'failed' && (
-            <button className="retry" onClick={() => api.retry(j.id).then(load)}>
+            <button type="button" className="retry" onClick={() => api.retry(j.id).then(load)}>
               Retry
             </button>
           )}

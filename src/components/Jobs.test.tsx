@@ -31,3 +31,9 @@ it('shows an error', async () => {
   render(<Jobs api={api} />)
   expect(await screen.findByRole('alert')).toHaveTextContent('boom')
 })
+
+it('falls back to the id when a job has no name', async () => {
+  const api = { jobs: vi.fn().mockResolvedValue({ jobs: [{ id: 'JX', state: 'queued' }] }) } as unknown as Api
+  render(<Jobs api={api} />)
+  expect(await screen.findByText('JX')).toBeInTheDocument()
+})
