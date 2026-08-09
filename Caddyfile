@@ -1,0 +1,9 @@
+# Internal static server for the SPA. TLS is terminated by the outer proxy
+# in sb-stack; this serves the built assets on plain HTTP with a single-page
+# fallback so client-side routes resolve to index.html.
+:80 {
+	root * /srv
+	encode gzip
+	try_files {path} /index.html
+	file_server
+}
