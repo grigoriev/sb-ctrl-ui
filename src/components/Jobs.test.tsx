@@ -6,7 +6,7 @@ import type { Api, Job } from '../api'
 
 it('renders jobs and retries a failed one', async () => {
   const jobs: Job[] = [
-    { id: 'J1', name: 'Movie', state: 'active', pct: 42, eta: '3m' },
+    { id: 'J1', name: 'Movie', state: 'active', pct: 42, rate: '24 MB/s', eta: '3m' },
     { id: 'J2', name: 'Show', state: 'failed', error: 'died' },
   ]
   const api = {
@@ -16,6 +16,7 @@ it('renders jobs and retries a failed one', async () => {
   render(<Jobs api={api} />)
   expect(await screen.findByText('Movie')).toBeInTheDocument()
   expect(screen.getByText(/42%/)).toBeInTheDocument()
+  expect(screen.getByText(/24 MB\/s/)).toBeInTheDocument()
   await userEvent.click(screen.getByText('Retry'))
   expect(api.retry).toHaveBeenCalledWith('J2')
 })

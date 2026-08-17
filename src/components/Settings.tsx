@@ -7,21 +7,43 @@ export function SettingsView({ settings, onSave }: Readonly<{ settings: Settings
 
   return (
     <form
-      className="settings"
       onSubmit={(e) => {
         e.preventDefault()
         onSave({ baseUrl: baseUrl.trim(), token: token.trim() })
       }}
     >
-      <label>
-        <span>API URL</span>
-        <input value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} placeholder="/api" />
-      </label>
-      <label>
-        <span>Token</span>
-        <input type="password" value={token} onChange={(e) => setToken(e.target.value)} placeholder="bearer token" />
-      </label>
-      <button type="submit">Save</button>
+      <div className="mb-3">
+        <label className="form-label" htmlFor="api-url">
+          API URL
+        </label>
+        <input
+          id="api-url"
+          className="form-control"
+          value={baseUrl}
+          onChange={(e) => setBaseUrl(e.target.value)}
+          placeholder="/api"
+          aria-describedby="api-url-help"
+        />
+        <div className="form-text" id="api-url-help">
+          Same origin as this page. Leave it alone unless the API runs elsewhere.
+        </div>
+      </div>
+      <div className="mb-3">
+        <label className="form-label" htmlFor="api-token">
+          Token
+        </label>
+        <input
+          id="api-token"
+          className="form-control"
+          type="password"
+          value={token}
+          onChange={(e) => setToken(e.target.value)}
+          placeholder="bearer token"
+        />
+      </div>
+      <button type="submit" className="btn btn-primary">
+        Save
+      </button>
     </form>
   )
 }

@@ -20,16 +20,22 @@ function App() {
   }
 
   return (
-    <div className="app">
-      <header>
-        <h1>sb-ctrl</h1>
-        <nav>
+    <div className="app container py-3">
+      <header className="d-flex flex-wrap align-items-baseline gap-3 border-bottom pb-2 mb-3">
+        <h1 className="h4 m-0">sb-ctrl</h1>
+        <ul className="nav nav-pills">
           {(['torrents', 'jobs', 'settings'] as Tab[]).map((t) => (
-            <button type="button" key={t} className={tab === t ? 'active' : ''} onClick={() => setTab(t)}>
-              {t[0].toUpperCase() + t.slice(1)}
-            </button>
+            <li className="nav-item" key={t}>
+              <button
+                type="button"
+                className={tab === t ? 'nav-link active' : 'nav-link'}
+                onClick={() => setTab(t)}
+              >
+                {t[0].toUpperCase() + t.slice(1)}
+              </button>
+            </li>
           ))}
-        </nav>
+        </ul>
       </header>
       <main>
         {tab === 'torrents' && <Torrents api={api} onPick={setPicked} />}
