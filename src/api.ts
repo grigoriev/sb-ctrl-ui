@@ -70,7 +70,10 @@ export class Api {
 
   constructor(settings: Settings, fetchImpl: typeof fetch = fetch) {
     this.settings = settings
-    this.fetchImpl = fetchImpl
+    // Bind to the global object. Stored on the instance, fetch would be called
+    // as a method of this class, and a browser then throws TypeError before it
+    // sends anything. request() would report that as "server unreachable".
+    this.fetchImpl = fetchImpl.bind(globalThis)
   }
 
   private async request<T>(method: string, path: string, body?: unknown): Promise<T> {

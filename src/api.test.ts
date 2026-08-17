@@ -99,6 +99,17 @@ describe('Api', () => {
     await expect(api.torrents()).rejects.toThrow('unreachable')
   })
 
+  it('calls fetch on the global object', async () => {
+    // A browser rejects fetch invoked as a method of another object. Stand in
+    // for that check, since a plain mock accepts any receiver.
+    const picky = function (this: unknown): Promise<Response> {
+      if (this !== globalThis) throw new TypeError('Illegal invocation')
+      return Promise.resolve({ ok: true, status: 200, json: async () => ({ items: [] }) } as Response)
+    }
+    const api = new Api(SETTINGS, picky as unknown as typeof fetch)
+    await expect(api.torrents()).resolves.toEqual({ items: [] })
+  })
+
   it('retry hits the retry endpoint', async () => {
     const { api, fetchMock } = apiWith({ body: { job_id: 'J1' } })
     await api.retry('J1')
