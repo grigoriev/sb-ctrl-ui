@@ -35,43 +35,48 @@ export function Wizard({ api, torrent, onClose }: Readonly<{ api: Api; torrent: 
 
   let body: ReactNode
   if (started) {
-    body = <output className="ok">Transfer started: {started}</output>
+    body = <output className="alert alert-success d-block">Transfer started: {started}</output>
   } else if (!candidates) {
-    body = <p className="muted">Searching TMDb…</p>
+    body = <p className="text-body-secondary">Searching TMDb…</p>
   } else if (candidates.length === 0) {
-    body = <p className="muted">No TMDb matches</p>
+    body = <p className="text-body-secondary">No TMDb matches</p>
   } else {
     body = (
-      <ul className="list">
+      <div className="list-group">
         {candidates.map((c) => (
-          <li key={c.tmdb_id}>
-            <button type="button" className="row" onClick={() => start(c)}>
-              <span className="title">{candidateName(c)}</span>
-              <span className="meta">
-                {KIND_LABEL[c.kind] ?? c.kind}
-                {c.overview ? ` · ${c.overview}` : ''}
-              </span>
-            </button>
-          </li>
+          <button
+            type="button"
+            key={c.tmdb_id}
+            className="list-group-item list-group-item-action text-start"
+            onClick={() => start(c)}
+          >
+            <span className="fw-semibold">{candidateName(c)}</span>
+            <span className="badge text-bg-light ms-2">{KIND_LABEL[c.kind] ?? c.kind}</span>
+            {c.overview && <small className="text-body-secondary d-block">{c.overview}</small>}
+          </button>
         ))}
-      </ul>
+      </div>
     )
   }
 
   return (
-    <dialog open className="modal" aria-label="Send to Plex">
-      <div className="modal-head">
-        <h2>{torrent.name}</h2>
-        <button type="button" aria-label="Close" onClick={onClose}>
-          ✕
-        </button>
+    <dialog open className="modal d-block" aria-label="Send to Plex">
+      <div className="modal-dialog modal-lg">
+        <div className="modal-content">
+          <div className="modal-header">
+            <h2 className="modal-title fs-6">{torrent.name}</h2>
+            <button type="button" className="btn-close" aria-label="Close" onClick={onClose} />
+          </div>
+          <div className="modal-body">
+            {error && (
+              <div className="alert alert-danger" role="alert">
+                {error}
+              </div>
+            )}
+            {body}
+          </div>
+        </div>
       </div>
-      {error && (
-        <p className="error" role="alert">
-          {error}
-        </p>
-      )}
-      {body}
     </dialog>
   )
 }

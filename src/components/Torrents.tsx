@@ -17,33 +17,46 @@ export function Torrents({ api, onPick }: Readonly<{ api: Api; onPick: (t: Torre
     }
   }, [api])
 
-  if (error) return <p className="error" role="alert">{error}</p>
-  if (!items) return <p className="muted">Loading…</p>
+  if (error)
+    return (
+      <div className="alert alert-danger" role="alert">
+        {error}
+      </div>
+    )
+  if (!items) return <p className="text-body-secondary">Loading…</p>
 
   const shown = items.filter((t) => t.name.toLowerCase().includes(filter.toLowerCase()))
   return (
     <div>
       <input
-        className="search"
+        className="form-control mb-3"
+        type="search"
         placeholder="Filter torrents…"
         value={filter}
         onChange={(e) => setFilter(e.target.value)}
       />
       {shown.length === 0 ? (
-        <p className="muted">No torrents</p>
+        <p className="text-body-secondary">No torrents</p>
       ) : (
-        <ul className="list">
+        <div className="list-group">
           {shown.map((t) => (
-            <li key={t.hash}>
-              <button type="button" className="row" onClick={() => onPick(t)}>
-                <span className="title">{t.name}</span>
-                <span className="meta">
-                  {humanSize(t.size)} · {t.is_multi ? 'folder' : 'file'} · ↵ send to Plex
-                </span>
-              </button>
-            </li>
+            <button
+              type="button"
+              key={t.hash}
+              className="list-group-item list-group-item-action d-flex justify-content-between align-items-start gap-3"
+              onClick={() => onPick(t)}
+            >
+              <span className="text-start">
+                <span className="fw-semibold">{t.name}</span>
+                <br />
+                <small className="text-body-secondary">
+                  {t.is_multi ? 'folder' : 'file'} · ↵ send to Plex
+                </small>
+              </span>
+              <span className="badge text-bg-secondary rounded-pill">{humanSize(t.size)}</span>
+            </button>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   )
