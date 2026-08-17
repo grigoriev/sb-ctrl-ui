@@ -68,6 +68,21 @@ export function humanSize(bytes: number): string {
   return `${Math.floor(bytes / 1024)} KB`
 }
 
+export interface Identity {
+  login_required: boolean
+  user: string | null
+}
+
+/** An API answer that was not ok, carrying the status so callers can act on 401. */
+export class HttpError extends Error {
+  readonly status: number
+
+  constructor(message: string, status: number) {
+    super(message)
+    this.status = status
+  }
+}
+
 export class Api {
   private readonly settings: Settings
   private readonly fetchImpl: typeof fetch
@@ -89,6 +104,8 @@ export class Api {
       res = await this.fetchImpl(`${this.settings.baseUrl}${path}`, {
         method,
         headers,
+        // The session cookie is HttpOnly; the browser attaches it for us.
+        credentials: 'same-origin',
         body: body === undefined ? undefined : JSON.stringify(body),
       })
     } catch {
@@ -96,9 +113,21 @@ export class Api {
     }
     if (!res.ok) {
       const data = await res.json().catch(() => ({}))
-      throw new Error(data.detail || data.error || `HTTP ${res.status}`)
+      throw new HttpError(data.detail || data.error || `HTTP ${res.status}`, res.status)
     }
     return (await res.json()) as T
+  }
+
+  me(): Promise<Identity> {
+    return this.request('GET', '/me')
+  }
+
+  login(user: string, password: string): Promise<{ user: string }> {
+    return this.request('POST', '/login', { user, password })
+  }
+
+  logout(): Promise<{ ok: boolean }> {
+    return this.request('POST', '/logout')
   }
 
   torrents(): Promise<{ items: Torrent[] }> {

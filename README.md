@@ -19,6 +19,8 @@ container environment, never from the code or the browser.
 - **Torrents** — completed torrents, filterable; click one to open the
   Send-to-Plex wizard (pick the TMDb match, start the transfer).
 - **Jobs** — transfer jobs with state / progress / ETA; retry a failed one.
+- **Sign in** — shown when the API reports `login_required`. The session lives in
+  an HttpOnly cookie the server sets, so the browser stores no credentials.
 ## Configuration
 
 The built app is static, so its entrypoint writes `/config.js` from the
