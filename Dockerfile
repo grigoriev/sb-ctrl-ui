@@ -9,4 +9,8 @@ RUN npm run build
 FROM caddy:2-alpine
 COPY --from=build /app/dist /srv
 COPY Caddyfile /etc/caddy/Caddyfile
+# Writes /srv/config.js from SB_API_BASE and SB_API_TOKEN, then starts Caddy.
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 EXPOSE 80
+ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]

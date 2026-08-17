@@ -11,16 +11,23 @@ wizard, and watch transfer jobs — a browser client alongside the
 [Alfred workflow](https://github.com/grigoriev/alfred-seedbox-workflow).
 
 Vite + React + TypeScript. Talks to the sb-ctrl REST API with a bearer token;
-the API URL and token are kept in the browser (localStorage), never in the code.
+the API URL, and a bearer token when a deployment needs one, come from the
+container environment, never from the code or the browser.
 
 ## Views
 
 - **Torrents** — completed torrents, filterable; click one to open the
   Send-to-Plex wizard (pick the TMDb match, start the transfer).
 - **Jobs** — transfer jobs with state / progress / ETA; retry a failed one.
-- **Settings** — the API URL and bearer token. The URL defaults to `/api`, which
-  is correct on any host that serves the UI and the API on one origin, so a new
-  browser only needs the token.
+## Configuration
+
+The built app is static, so its entrypoint writes `/config.js` from the
+environment before Caddy starts.
+
+| Variable | Default | Meaning |
+|----------|---------|---------|
+| `SB_API_BASE` | `/api` | Where the API lives. The default is right whenever one origin serves the UI and the API. |
+| `SB_API_TOKEN` | empty | Bearer token, only for a deployment whose proxy does not add one. Anyone who can load the page can read it, so prefer the proxy. |
 
 ## Development
 
@@ -33,8 +40,8 @@ npm test           # vitest + coverage
 npm run build      # production build to dist/
 ```
 
-Point it at a running sb-ctrl instance via **Settings**. Serve `dist/` behind
-the same reverse proxy as the API, or from any static host on the LAN/VPN.
+Serve `dist/` behind the same reverse proxy as the API. Authentication belongs
+to that proxy: it adds the bearer token, so no browser has to hold one.
 
 ## Status
 

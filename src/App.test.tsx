@@ -1,10 +1,9 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, beforeEach, expect, it, vi } from 'vitest'
+import { beforeEach, expect, it, vi } from 'vitest'
 import App from './App'
 
 beforeEach(() => {
-  localStorage.clear()
   vi.stubGlobal(
     'fetch',
     vi.fn(async (url: string) => {
@@ -20,14 +19,11 @@ beforeEach(() => {
   )
 })
 
-afterEach(() => vi.unstubAllGlobals())
-
 it('switches between tabs', async () => {
   render(<App />)
+  expect(await screen.findByText('Movie')).toBeInTheDocument()
   await userEvent.click(screen.getByRole('button', { name: 'Jobs' }))
   expect(await screen.findByText('No transfers')).toBeInTheDocument()
-  await userEvent.click(screen.getByRole('button', { name: 'Settings' }))
-  expect(screen.getByText('Save')).toBeInTheDocument()
 })
 
 it('opens and closes the wizard', async () => {
@@ -36,12 +32,4 @@ it('opens and closes the wizard', async () => {
   expect(await screen.findByRole('dialog')).toBeInTheDocument()
   await userEvent.click(screen.getByLabelText('Close'))
   expect(screen.queryByRole('dialog')).toBeNull()
-})
-
-it('saves settings and returns to torrents', async () => {
-  render(<App />)
-  await userEvent.click(screen.getByRole('button', { name: 'Settings' }))
-  await userEvent.type(screen.getByPlaceholderText(/bearer/i), 'tok')
-  await userEvent.click(screen.getByText('Save'))
-  expect(await screen.findByText('Movie')).toBeInTheDocument()
 })
