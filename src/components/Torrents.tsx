@@ -43,17 +43,18 @@ export function Torrents({ api, onPick }: Readonly<{ api: Api; onPick: (t: Torre
             <button
               type="button"
               key={t.hash}
-              className="list-group-item list-group-item-action d-flex justify-content-between align-items-start gap-3"
+              className="list-group-item list-group-item-action d-flex justify-content-between align-items-start gap-2 gap-sm-3"
               onClick={() => onPick(t)}
             >
-              <span className="text-start">
+              {/* Release names are long and unbroken; let them wrap anywhere. */}
+              <span className="text-start text-break">
                 <span className="fw-semibold">{t.name}</span>
                 <br />
                 <small className="text-body-secondary">
                   {t.is_multi ? 'folder' : 'file'} · ↵ send to Plex
                 </small>
               </span>
-              <span className="badge text-bg-secondary rounded-pill">{humanSize(t.size)}</span>
+              <span className="badge text-bg-secondary rounded-pill flex-shrink-0">{humanSize(t.size)}</span>
             </button>
           ))}
         </div>

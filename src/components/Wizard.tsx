@@ -47,7 +47,7 @@ export function Wizard({ api, torrent, onClose }: Readonly<{ api: Api; torrent: 
           <button
             type="button"
             key={c.tmdb_id}
-            className="list-group-item list-group-item-action text-start"
+            className="list-group-item list-group-item-action text-start text-break"
             onClick={() => start(c)}
           >
             <span className="fw-semibold">{candidateName(c)}</span>
@@ -61,10 +61,11 @@ export function Wizard({ api, torrent, onClose }: Readonly<{ api: Api; torrent: 
 
   return (
     <dialog open className="modal d-block" aria-label="Send to Plex">
-      <div className="modal-dialog modal-lg">
+      {/* Full screen on a phone, a centred scrollable box from tablets up. */}
+      <div className="modal-dialog modal-lg modal-dialog-scrollable modal-fullscreen-sm-down">
         <div className="modal-content">
           <div className="modal-header">
-            <h2 className="modal-title fs-6">{torrent.name}</h2>
+            <h2 className="modal-title fs-6 text-break">{torrent.name}</h2>
             <button type="button" className="btn-close" aria-label="Close" onClick={onClose} />
           </div>
           <div className="modal-body">

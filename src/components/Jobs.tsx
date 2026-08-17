@@ -41,9 +41,11 @@ export function Jobs({ api }: Readonly<{ api: Api }>) {
       {jobs.map((j) => (
         <div className="card mb-2" key={j.id}>
           <div className="card-body">
-            <div className="d-flex justify-content-between align-items-center gap-3">
-              <span className="fw-semibold">{j.name ?? j.id}</span>
-              <span className={`badge ${STATE_BADGE[j.state] ?? 'text-bg-secondary'}`}>{j.state}</span>
+            <div className="d-flex justify-content-between align-items-start gap-2">
+              <span className="fw-semibold text-break">{j.name ?? j.id}</span>
+              <span className={`badge flex-shrink-0 ${STATE_BADGE[j.state] ?? 'text-bg-secondary'}`}>
+                {j.state}
+              </span>
             </div>
             {j.pct != null && (
               <div className="progress mt-2" role="progressbar" aria-label="progress" aria-valuenow={j.pct}>
