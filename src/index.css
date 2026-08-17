@@ -5,15 +5,26 @@
 }
 
 /* The wizard is a plain <dialog> styled with Bootstrap modal classes, so it
-   needs the backdrop Bootstrap's own JS would otherwise draw. */
+   needs the backdrop and the full-viewport box that Bootstrap's own JS would
+   otherwise set up. */
 dialog.modal {
   border: 0;
+  padding: 0;
   width: 100%;
   max-width: 100%;
   height: 100%;
+  max-height: 100%;
   background: rgba(0, 0, 0, 0.5);
 }
 
 dialog.modal::backdrop {
   background: rgba(0, 0, 0, 0.5);
+}
+
+/* Comfortable touch targets on a phone; the desktop keeps Bootstrap's own. */
+@media (max-width: 575.98px) {
+  .list-group-item {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
 }
