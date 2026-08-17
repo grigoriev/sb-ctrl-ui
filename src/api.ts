@@ -39,7 +39,7 @@ export interface Settings {
 }
 
 const SETTINGS_KEY = 'sb-ctrl-ui.settings'
-const DEFAULT_SETTINGS: Settings = { baseUrl: 'https://beaver.h.g7v.io', token: '' }
+const DEFAULT_SETTINGS: Settings = { baseUrl: '/api', token: '' }
 
 export function loadSettings(): Settings {
   try {

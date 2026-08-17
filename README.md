@@ -18,7 +18,9 @@ the API URL and token are kept in the browser (localStorage), never in the code.
 - **Torrents** — completed torrents, filterable; click one to open the
   Send-to-Plex wizard (pick the TMDb match, start the transfer).
 - **Jobs** — transfer jobs with state / progress / ETA; retry a failed one.
-- **Settings** — the API URL and bearer token.
+- **Settings** — the API URL and bearer token. The URL defaults to `/api`, which
+  is correct on any host that serves the UI and the API on one origin, so a new
+  browser only needs the token.
 
 ## Development
 

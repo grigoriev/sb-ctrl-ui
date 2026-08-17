@@ -39,14 +39,14 @@ describe('helpers', () => {
   })
 
   it('settings round-trip through localStorage', () => {
-    expect(loadSettings().baseUrl).toBe('https://beaver.h.g7v.io')
+    expect(loadSettings().baseUrl).toBe('/api')
     saveSettings({ baseUrl: 'http://x', token: 'k' })
     expect(loadSettings()).toEqual({ baseUrl: 'http://x', token: 'k' })
   })
 
   it('loadSettings tolerates corrupt storage', () => {
     localStorage.setItem('sb-ctrl-ui.settings', 'not json')
-    expect(loadSettings().baseUrl).toBe('https://beaver.h.g7v.io')
+    expect(loadSettings().baseUrl).toBe('/api')
   })
 })
 
