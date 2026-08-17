@@ -8,7 +8,8 @@ beforeEach(() => {
   vi.stubGlobal(
     'fetch',
     vi.fn(async (url: string) => {
-      const path = new URL(url).pathname
+      // The default base URL is relative, so resolve against a base and drop it.
+      const path = new URL(url, 'http://localhost').pathname.replace(/^\/api/, '')
       const body = path.startsWith('/search')
         ? { guess: {}, candidates: [] }
         : path === '/torrents'

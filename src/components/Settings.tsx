@@ -15,7 +15,7 @@ export function SettingsView({ settings, onSave }: Readonly<{ settings: Settings
     >
       <label>
         <span>API URL</span>
-        <input value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} placeholder="https://beaver.h.g7v.io" />
+        <input value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} placeholder="/api" />
       </label>
       <label>
         <span>Token</span>

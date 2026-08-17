@@ -6,7 +6,7 @@ import { SettingsView } from './Settings'
 it('saves trimmed settings', async () => {
   const onSave = vi.fn()
   render(<SettingsView settings={{ baseUrl: 'http://x', token: '' }} onSave={onSave} />)
-  const url = screen.getByPlaceholderText(/beaver/i)
+  const url = screen.getByPlaceholderText('/api')
   await userEvent.clear(url)
   await userEvent.type(url, '  http://new  ')
   await userEvent.type(screen.getByPlaceholderText(/bearer/i), 'secret')
