@@ -38,20 +38,24 @@ export interface Settings {
   token: string
 }
 
-const SETTINGS_KEY = 'sb-ctrl-ui.settings'
-const DEFAULT_SETTINGS: Settings = { baseUrl: '/api', token: '' }
-
-export function loadSettings(): Settings {
-  try {
-    const raw = localStorage.getItem(SETTINGS_KEY)
-    return raw ? { ...DEFAULT_SETTINGS, ...JSON.parse(raw) } : { ...DEFAULT_SETTINGS }
-  } catch {
-    return { ...DEFAULT_SETTINGS }
+declare global {
+  interface Window {
+    SB_API_BASE?: string
+    SB_API_TOKEN?: string
   }
 }
 
-export function saveSettings(settings: Settings): void {
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings))
+/**
+ * Where the API lives and, if a deployment has no proxy to add it, the bearer
+ * token. Both come from the container: its entrypoint writes /config.js from
+ * the environment before the app loads. Defaults suit a deployment that serves
+ * the UI and the API on one origin and authenticates at the proxy.
+ *
+ * A token placed here is readable by anyone who can load the page. Prefer a
+ * proxy that adds the Authorization header instead.
+ */
+export function runtimeConfig(w: Window = window): Settings {
+  return { baseUrl: w.SB_API_BASE ?? '/api', token: w.SB_API_TOKEN ?? '' }
 }
 
 export function candidateName(c: Candidate): string {

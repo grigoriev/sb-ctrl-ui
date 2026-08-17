@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { Api, candidateName, humanSize, loadSettings, saveSettings, type Settings } from './api'
+import { Api, candidateName, humanSize, runtimeConfig, type Settings } from './api'
 
 const SETTINGS: Settings = { baseUrl: 'http://host', token: 'tok' }
 
@@ -38,15 +38,17 @@ describe('helpers', () => {
     expect(candidateName({ original_title: 'Film', year: '' } as never)).toBe('Film')
   })
 
-  it('settings round-trip through localStorage', () => {
-    expect(loadSettings().baseUrl).toBe('/api')
-    saveSettings({ baseUrl: 'http://x', token: 'k' })
-    expect(loadSettings()).toEqual({ baseUrl: 'http://x', token: 'k' })
+  it('runtimeConfig falls back to the same origin and no token', () => {
+    expect(runtimeConfig({} as Window)).toEqual({ baseUrl: '/api', token: '' })
   })
 
-  it('loadSettings tolerates corrupt storage', () => {
-    localStorage.setItem('sb-ctrl-ui.settings', 'not json')
-    expect(loadSettings().baseUrl).toBe('/api')
+  it('runtimeConfig takes what the container wrote', () => {
+    const w = { SB_API_BASE: 'https://host/api', SB_API_TOKEN: 'tok' } as Window
+    expect(runtimeConfig(w)).toEqual({ baseUrl: 'https://host/api', token: 'tok' })
+  })
+
+  it('runtimeConfig reads the real window by default', () => {
+    expect(runtimeConfig().baseUrl).toBe('/api')
   })
 })
 
