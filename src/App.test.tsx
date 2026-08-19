@@ -11,6 +11,7 @@ let reachable: boolean
 let logoutFails: boolean
 
 beforeEach(() => {
+  window.location.hash = ''
   identity = { login_required: false, user: null }
   reachable = true
   logoutFails = false
@@ -86,4 +87,21 @@ it('signs out even when the server refuses to say goodbye', async () => {
   identity = { login_required: true, user: null }
   await userEvent.click(screen.getByRole('button', { name: 'Sign out' }))
   expect(await screen.findByRole('button', { name: 'Sign in' })).toBeInTheDocument()
+})
+
+it('opens the tab named in the url and keeps it on a reload', async () => {
+  window.location.hash = '#jobs'
+  const { unmount } = render(<App />)
+  expect(await screen.findByText('No transfers')).toBeInTheDocument()
+  unmount()
+
+  render(<App />)
+  expect(await screen.findByText('No transfers')).toBeInTheDocument()
+})
+
+it('writes the chosen tab to the url', async () => {
+  render(<App />)
+  await screen.findByText('Movie')
+  await userEvent.click(screen.getByRole('button', { name: 'Jobs' }))
+  expect(window.location.hash).toBe('#jobs')
 })
