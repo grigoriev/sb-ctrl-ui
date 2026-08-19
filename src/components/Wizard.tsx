@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { Api, candidateName, type Candidate, type Torrent } from '../api'
+import { Api, candidateName, mergesIntoDestination, type Candidate, type Collision, type Torrent } from '../api'
 
 const KIND_LABEL: Record<string, string> = {
   movie: 'Movie',
@@ -8,10 +8,44 @@ const KIND_LABEL: Record<string, string> = {
   cartoon_series: 'Cartoon series',
 }
 
+/** Shown when the destination is taken, so nothing is replaced unasked. */
+function Occupied({
+  candidate,
+  dest,
+  onConfirm,
+  onBack,
+}: Readonly<{ candidate: Candidate; dest: string; onConfirm: () => void; onBack: () => void }>) {
+  const merges = mergesIntoDestination(candidate.kind)
+  return (
+    <div>
+      <div className="alert alert-warning" role="alert">
+        <p className="mb-1">
+          {merges ? 'This show is already in the library.' : 'This title is already in the library.'}
+        </p>
+        <p className="mb-1 font-monospace text-break">{dest}</p>
+        <p className="mb-0">
+          {merges
+            ? 'Continuing adds the episodes of this pack and replaces the ones it repeats.'
+            : 'Continuing replaces what is there.'}
+        </p>
+      </div>
+      <div className="d-flex gap-2">
+        <button type="button" className="btn btn-warning" onClick={onConfirm}>
+          {merges ? 'Add episodes' : 'Replace'}
+        </button>
+        <button type="button" className="btn btn-outline-secondary" onClick={onBack}>
+          Back
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export function Wizard({ api, torrent, onClose }: Readonly<{ api: Api; torrent: Torrent; onClose: () => void }>) {
   const [candidates, setCandidates] = useState<Candidate[] | null>(null)
   const [error, setError] = useState('')
   const [started, setStarted] = useState('')
+  const [occupied, setOccupied] = useState<{ candidate: Candidate; dest: string } | null>(null)
 
   useEffect(() => {
     // <dialog open> is not modal, so the browser does not handle Escape for us.
@@ -31,9 +65,14 @@ export function Wizard({ api, torrent, onClose }: Readonly<{ api: Api; torrent: 
     }
   }, [api, torrent])
 
-  async function start(c: Candidate) {
+  async function start(c: Candidate, collision: Collision = 'skip') {
     try {
-      await api.createJob(torrent.hash, c.kind, candidateName(c))
+      const result = await api.createJob(torrent.hash, c.kind, candidateName(c), collision)
+      if (result.skipped) {
+        setOccupied({ candidate: c, dest: result.dest_path ?? '' })
+        return
+      }
+      setOccupied(null)
       setStarted(candidateName(c))
     } catch (e) {
       setError((e as Error).message)
@@ -43,6 +82,14 @@ export function Wizard({ api, torrent, onClose }: Readonly<{ api: Api; torrent: 
   let body: ReactNode
   if (started) {
     body = <output className="alert alert-success d-block">Transfer started: {started}</output>
+  } else if (occupied) {
+    body = (
+      <Occupied
+        {...occupied}
+        onConfirm={() => start(occupied.candidate, 'overwrite')}
+        onBack={() => setOccupied(null)}
+      />
+    )
   } else if (!candidates) {
     body = <p className="text-body-secondary">Searching TMDb…</p>
   } else if (candidates.length === 0) {

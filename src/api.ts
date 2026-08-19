@@ -40,6 +40,19 @@ export interface SearchResult {
   candidates: Candidate[]
 }
 
+export type Collision = 'skip' | 'overwrite'
+
+export interface CreateJobResult {
+  job_id?: string
+  skipped?: boolean
+  dest_path?: string
+}
+
+/** A series pack merges into the show folder; anything else replaces what is there. */
+export function mergesIntoDestination(kind: string): boolean {
+  return kind === 'series' || kind === 'cartoon_series'
+}
+
 export interface Season {
   season: number
   episodes: number
@@ -183,8 +196,13 @@ export class Api {
     return this.request('GET', `/search?name=${encodeURIComponent(name)}`)
   }
 
-  createJob(hash: string, kind: string, name: string): Promise<{ job_id: string }> {
-    return this.request('POST', '/jobs', { hash, kind, name, collision: 'overwrite' })
+  /**
+   * Start a transfer. With `collision: 'skip'` the server refuses to touch a
+   * destination that already exists and answers `{skipped, dest_path}`, which
+   * is what lets the UI ask before anything is overwritten.
+   */
+  createJob(hash: string, kind: string, name: string, collision: Collision = 'skip'): Promise<CreateJobResult> {
+    return this.request('POST', '/jobs', { hash, kind, name, collision })
   }
 
   jobs(): Promise<{ jobs: Job[] }> {
