@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { Api, candidateName, humanSize, runtimeConfig, type Settings } from './api'
+import { Api, candidateName, humanSize, jobTime, runtimeConfig, seasonsLabel, type Settings } from './api'
 
 const SETTINGS: Settings = { baseUrl: 'http://host', token: 'tok' }
 
@@ -124,4 +124,21 @@ describe('Api', () => {
     await api.retry('J1')
     expect(fetchMock.mock.calls[0][0]).toBe('http://host/jobs/J1/retry')
   })
+})
+
+it('labels no seasons as nothing', () => {
+  expect(seasonsLabel([])).toBe('')
+})
+
+it('labels one season, singular and plural', () => {
+  expect(seasonsLabel([{ season: 1, episodes: 8 }])).toBe('Season 1: 8 episodes')
+  expect(seasonsLabel([{ season: 3, episodes: 1 }])).toBe('Season 3: 1 episode')
+})
+
+it('labels several seasons with their counts', () => {
+  expect(seasonsLabel([{ season: 1, episodes: 8 }, { season: 2, episodes: 10 }])).toBe('Seasons 1 (8), 2 (10)')
+})
+
+it('turns epoch seconds into a local time', () => {
+  expect(jobTime(1755610000)).toBe(new Date(1755610000000).toLocaleString())
 })
