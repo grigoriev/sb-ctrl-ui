@@ -63,3 +63,12 @@ it('reports a start error and closes', async () => {
   await userEvent.click(screen.getByLabelText('Close'))
   expect(onClose).toHaveBeenCalled()
 })
+
+it('closes on Escape', async () => {
+  const api = { search: vi.fn().mockResolvedValue({ guess: {}, candidates }) } as unknown as Api
+  const onClose = vi.fn()
+  render(<Wizard api={api} torrent={torrent} onClose={onClose} />)
+  await screen.findByText('Some Movie (2024)')
+  await userEvent.keyboard('{Escape}')
+  expect(onClose).toHaveBeenCalled()
+})

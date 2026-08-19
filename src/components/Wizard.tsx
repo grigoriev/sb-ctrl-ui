@@ -14,6 +14,13 @@ export function Wizard({ api, torrent, onClose }: Readonly<{ api: Api; torrent: 
   const [started, setStarted] = useState('')
 
   useEffect(() => {
+    // <dialog open> is not modal, so the browser does not handle Escape for us.
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  useEffect(() => {
     let active = true
     api.search(torrent.name).then(
       (r) => active && setCandidates(r.candidates),
