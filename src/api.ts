@@ -191,6 +191,10 @@ export class Api {
     return this.request('GET', '/jobs')
   }
 
+  jobLog(id: string): Promise<{ log: string }> {
+    return this.request('GET', `/jobs/${encodeURIComponent(id)}/log`)
+  }
+
   deleteJob(id: string): Promise<{ deleted: string }> {
     return this.request('DELETE', `/jobs/${encodeURIComponent(id)}`)
   }

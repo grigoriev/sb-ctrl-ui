@@ -81,6 +81,13 @@ describe('Api', () => {
     })
   })
 
+  it('reads a job log', async () => {
+    const { api, fetchMock } = apiWith({ body: { log: 'lftp said this' } })
+    const out = await api.jobLog('J 1')
+    expect(out.log).toBe('lftp said this')
+    expect(fetchMock.mock.calls[0][0]).toContain('/jobs/J%201/log')
+  })
+
   it('surfaces an API error detail', async () => {
     const { api } = apiWith({ ok: false, status: 404, body: { detail: 'nope' } })
     await expect(api.jobs()).rejects.toThrow('nope')
