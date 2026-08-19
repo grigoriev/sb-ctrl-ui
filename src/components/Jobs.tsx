@@ -59,15 +59,28 @@ export function Jobs({ api }: Readonly<{ api: Api }>) {
               {j.eta ? `ETA ${j.eta}` : ''}
               {j.error ?? ''}
             </small>
-            {j.state === 'failed' && (
-              <button
-                type="button"
-                className="btn btn-sm btn-outline-secondary mt-2"
-                onClick={() => api.retry(j.id).then(load)}
-              >
-                Retry
-              </button>
-            )}
+            <div className="d-flex gap-2 mt-2">
+              {j.state === 'failed' && (
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline-secondary"
+                  onClick={() => api.retry(j.id).then(load)}
+                >
+                  Retry
+                </button>
+              )}
+              {/* A running job is refused by the server, so do not offer it. */}
+              {j.state !== 'active' && (
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline-danger"
+                  aria-label={`Delete ${j.name ?? j.id}`}
+                  onClick={() => api.deleteJob(j.id).then(load, (e: Error) => setError(e.message))}
+                >
+                  Delete
+                </button>
+              )}
+            </div>
           </div>
         </div>
       ))}

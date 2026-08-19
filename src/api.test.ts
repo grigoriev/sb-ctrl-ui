@@ -112,6 +112,13 @@ describe('Api', () => {
     await expect(api.torrents()).resolves.toEqual({ items: [] })
   })
 
+  it('deleteJob hits the job endpoint', async () => {
+    const { api, fetchMock } = apiWith({ body: { deleted: 'J1' } })
+    await api.deleteJob('J1')
+    expect(fetchMock.mock.calls[0][0]).toBe('http://host/jobs/J1')
+    expect((fetchMock.mock.calls[0][1] as RequestInit).method).toBe('DELETE')
+  })
+
   it('retry hits the retry endpoint', async () => {
     const { api, fetchMock } = apiWith({ body: { job_id: 'J1' } })
     await api.retry('J1')
