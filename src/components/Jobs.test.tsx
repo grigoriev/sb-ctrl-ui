@@ -68,3 +68,40 @@ it('reports a refused delete', async () => {
   await userEvent.click(await screen.findByRole('button', { name: 'Delete Stuck' }))
   expect(await screen.findByRole('alert')).toHaveTextContent('job is running')
 })
+
+it('shows what a finished job transferred', async () => {
+  const jobs: Job[] = [
+    {
+      id: 'J9',
+      name: '1670 (2023)',
+      state: 'done',
+      pct: 100,
+      release: '1670.S03.WEB-DL.1080p',
+      size: 17179869184,
+      dest: '/data/media/series/1670 (2023)',
+      finished: 1755610000,
+      seasons: [{ season: 3, episodes: 8 }],
+    },
+  ]
+  const api = { jobs: vi.fn().mockResolvedValue({ jobs }) } as unknown as Api
+  render(<Jobs api={api} />)
+  expect(await screen.findByText('1670.S03.WEB-DL.1080p')).toBeInTheDocument()
+  expect(screen.getByText(/Season 3: 8 episodes/)).toBeInTheDocument()
+  expect(screen.getByText(/16.0 GB/)).toBeInTheDocument()
+  expect(screen.getByText('/data/media/series/1670 (2023)')).toBeInTheDocument()
+})
+
+it('keeps the card bare for a job from an older version', async () => {
+  const jobs: Job[] = [{ id: 'J8', name: 'Old', state: 'done', pct: 100 }]
+  const api = { jobs: vi.fn().mockResolvedValue({ jobs }) } as unknown as Api
+  render(<Jobs api={api} />)
+  expect(await screen.findByText('Old')).toBeInTheDocument()
+  expect(screen.queryByText(/Season/)).toBeNull()
+})
+
+it('shows the seasons of a job that has no size yet', async () => {
+  const jobs: Job[] = [{ id: 'J7', name: 'Show', state: 'active', pct: 10, seasons: [{ season: 1, episodes: 2 }] }]
+  const api = { jobs: vi.fn().mockResolvedValue({ jobs }) } as unknown as Api
+  render(<Jobs api={api} />)
+  expect(await screen.findByText('Season 1: 2 episodes')).toBeInTheDocument()
+})

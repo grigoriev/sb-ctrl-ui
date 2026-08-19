@@ -25,6 +25,11 @@ export interface SearchResult {
   candidates: Candidate[]
 }
 
+export interface Season {
+  season: number
+  episodes: number
+}
+
 export interface Job {
   id: string
   name?: string
@@ -33,6 +38,14 @@ export interface Job {
   rate?: string
   eta?: string
   error?: string
+  /** The fields below arrive from sb-ctrl 0.3.0 on; older jobs lack them. */
+  release?: string
+  kind?: string
+  size?: number
+  dest?: string
+  created?: number
+  finished?: number
+  seasons?: Season[]
 }
 
 export interface Settings {
@@ -62,6 +75,21 @@ export function runtimeConfig(w: Window = window): Settings {
 
 export function candidateName(c: Candidate): string {
   return c.year ? `${c.original_title} (${c.year})` : c.original_title
+}
+
+/** "Season 1: 8 episodes", or "Seasons 1 (8), 2 (10)" for a multi season pack. */
+export function seasonsLabel(seasons: Season[]): string {
+  if (seasons.length === 0) return ''
+  if (seasons.length === 1) {
+    const only = seasons[0]
+    return `Season ${only.season}: ${only.episodes} ${only.episodes === 1 ? 'episode' : 'episodes'}`
+  }
+  return `Seasons ${seasons.map((s) => `${s.season} (${s.episodes})`).join(', ')}`
+}
+
+/** A job timestamp in the reader's own locale; epoch seconds, not milliseconds. */
+export function jobTime(epochSeconds: number): string {
+  return new Date(epochSeconds * 1000).toLocaleString()
 }
 
 export function humanSize(bytes: number): string {

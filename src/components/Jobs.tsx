@@ -1,11 +1,23 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Api, type Job } from '../api'
+import { Api, humanSize, jobTime, seasonsLabel, type Job } from '../api'
 
 const STATE_BADGE: Record<string, string> = {
   failed: 'text-bg-danger',
   done: 'text-bg-success',
   active: 'text-bg-primary',
 }
+
+/** The one line under the bar: what came down, how much of it, and when. */
+function metaLine(j: Job): string {
+  return [
+    j.seasons?.length ? seasonsLabel(j.seasons) : '',
+    j.size ? humanSize(j.size) : '',
+    j.finished ? jobTime(j.finished) : '',
+  ]
+    .filter(Boolean)
+    .join(' · ')
+}
+
 
 export function Jobs({ api }: Readonly<{ api: Api }>) {
   const [jobs, setJobs] = useState<Job[] | null>(null)
@@ -47,6 +59,8 @@ export function Jobs({ api }: Readonly<{ api: Api }>) {
                 {j.state}
               </span>
             </div>
+            {/* The release name is what tells two transfers of one show apart. */}
+            {j.release && <small className="text-body-secondary d-block text-break">{j.release}</small>}
             {j.pct != null && (
               <div className="progress mt-2" role="progressbar" aria-label="progress" aria-valuenow={j.pct}>
                 <div className="progress-bar" style={{ width: `${j.pct}%` }}>
@@ -59,6 +73,8 @@ export function Jobs({ api }: Readonly<{ api: Api }>) {
               {j.eta ? `ETA ${j.eta}` : ''}
               {j.error ?? ''}
             </small>
+            {metaLine(j) && <small className="text-body-secondary d-block">{metaLine(j)}</small>}
+            {j.dest && <small className="text-body-secondary d-block text-break font-monospace">{j.dest}</small>}
             <div className="d-flex gap-2 mt-2">
               {j.state === 'failed' && (
                 <button
