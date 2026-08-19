@@ -146,6 +146,10 @@ export class Api {
     return this.request('GET', '/jobs')
   }
 
+  deleteJob(id: string): Promise<{ deleted: string }> {
+    return this.request('DELETE', `/jobs/${encodeURIComponent(id)}`)
+  }
+
   retry(id: string): Promise<{ job_id: string }> {
     return this.request('POST', `/jobs/${encodeURIComponent(id)}/retry`)
   }
