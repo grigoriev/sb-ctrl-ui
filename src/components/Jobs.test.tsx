@@ -38,3 +38,33 @@ it('falls back to the id when a job has no name', async () => {
   render(<Jobs api={api} />)
   expect(await screen.findByText('JX')).toBeInTheDocument()
 })
+
+it('deletes a finished job', async () => {
+  const jobs: Job[] = [{ id: 'J3', name: 'Old', state: 'done', pct: 100 }]
+  const api = {
+    jobs: vi.fn().mockResolvedValue({ jobs }),
+    deleteJob: vi.fn().mockResolvedValue({ deleted: 'J3' }),
+  } as unknown as Api
+  render(<Jobs api={api} />)
+  await userEvent.click(await screen.findByRole('button', { name: 'Delete Old' }))
+  expect(api.deleteJob).toHaveBeenCalledWith('J3')
+})
+
+it('offers no delete for a running job', async () => {
+  const jobs: Job[] = [{ id: 'J4', name: 'Running', state: 'active', pct: 5 }]
+  const api = { jobs: vi.fn().mockResolvedValue({ jobs }) } as unknown as Api
+  render(<Jobs api={api} />)
+  await screen.findByText('Running')
+  expect(screen.queryByRole('button', { name: /Delete/ })).toBeNull()
+})
+
+it('reports a refused delete', async () => {
+  const jobs: Job[] = [{ id: 'J5', name: 'Stuck', state: 'failed', error: 'died' }]
+  const api = {
+    jobs: vi.fn().mockResolvedValue({ jobs }),
+    deleteJob: vi.fn().mockRejectedValue(new Error('job is running')),
+  } as unknown as Api
+  render(<Jobs api={api} />)
+  await userEvent.click(await screen.findByRole('button', { name: 'Delete Stuck' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('job is running')
+})
