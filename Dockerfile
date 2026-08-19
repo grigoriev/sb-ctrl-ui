@@ -6,7 +6,7 @@ RUN npm ci --ignore-scripts
 COPY . .
 RUN npm run build
 
-FROM caddy:2-alpine
+FROM caddy:2-alpine@sha256:5f5c8640aae01df9654968d946d8f1a56c497f1dd5c5cda4cf95ab7c14d58648
 COPY --from=build /app/dist /srv
 COPY Caddyfile /etc/caddy/Caddyfile
 # Writes /srv/config.js from SB_API_BASE and SB_API_TOKEN, then starts Caddy.
