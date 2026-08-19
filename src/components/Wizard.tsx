@@ -54,10 +54,20 @@ export function Wizard({ api, torrent, onClose }: Readonly<{ api: Api; torrent: 
           <button
             type="button"
             key={c.tmdb_id}
-            className="list-group-item list-group-item-action text-start text-break d-flex gap-2"
+            className="list-group-item list-group-item-action text-start text-break d-flex align-items-start gap-3"
             onClick={() => start(c)}
           >
-            {c.poster && <img src={c.poster} alt="" width={46} loading="lazy" className="rounded flex-shrink-0" />}
+            {/* align-items-start keeps the 2:3 poster from stretching to the row height. */}
+            {c.poster && (
+              <img
+                src={c.poster}
+                alt=""
+                width={70}
+                height={105}
+                loading="lazy"
+                className="rounded flex-shrink-0 object-fit-cover"
+              />
+            )}
             <span>
               <span className="fw-semibold">{candidateName(c)}</span>
               <span className="badge text-bg-light ms-2">{KIND_LABEL[c.kind] ?? c.kind}</span>
