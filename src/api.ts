@@ -1,3 +1,10 @@
+/** What a torrent's transfer is doing, when one exists. Absent before 0.3.0. */
+export interface TorrentJob {
+  id: string
+  state: string
+  pct?: number
+}
+
 export interface Torrent {
   hash: string
   name: string
@@ -5,6 +12,14 @@ export interface Torrent {
   is_multi: boolean
   base_rel: string
   finished: number
+  job?: TorrentJob
+  /** True while the transferred title still sits in the library. */
+  delivered?: boolean
+}
+
+/** Whether a transfer is still on its way, and so worth a progress ring. */
+export function inFlight(state: string): boolean {
+  return state === 'active' || state === 'queued'
 }
 
 export interface Candidate {
