@@ -16,6 +16,8 @@ export interface Candidate {
   overview: string
   is_animation: boolean
   kind: string
+  /** Optional: an API older than 0.2.0 does not send it. */
+  poster?: string
 }
 
 export interface SearchResult {

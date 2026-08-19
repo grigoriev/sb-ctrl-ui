@@ -15,6 +15,7 @@ const candidates: Candidate[] = [
     overview: 'a film',
     is_animation: false,
     kind: 'movie',
+    poster: 'https://image.tmdb.org/t/p/w154/a.jpg',
   },
   {
     tmdb_id: 2,
@@ -71,4 +72,12 @@ it('closes on Escape', async () => {
   await screen.findByText('Some Movie (2024)')
   await userEvent.keyboard('{Escape}')
   expect(onClose).toHaveBeenCalled()
+})
+
+it('shows a poster when the api sends one', async () => {
+  const api = { search: vi.fn().mockResolvedValue({ guess: {}, candidates }) } as unknown as Api
+  render(<Wizard api={api} torrent={torrent} onClose={vi.fn()} />)
+  const posters = await screen.findAllByRole('presentation')
+  expect(posters).toHaveLength(1)
+  expect(posters[0]).toHaveAttribute('src', 'https://image.tmdb.org/t/p/w154/a.jpg')
 })
