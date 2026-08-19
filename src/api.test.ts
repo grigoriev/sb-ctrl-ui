@@ -1,5 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { Api, candidateName, humanSize, jobTime, runtimeConfig, seasonsLabel, type Settings } from './api'
+import {
+  Api,
+  candidateName,
+  humanSize,
+  jobTime,
+  mergesIntoDestination,
+  runtimeConfig,
+  seasonsLabel,
+  type Settings,
+} from './api'
 
 const SETTINGS: Settings = { baseUrl: 'http://host', token: 'tok' }
 
@@ -77,8 +86,15 @@ describe('Api', () => {
       hash: 'H1',
       kind: 'movie',
       name: 'Film (2024)',
-      collision: 'overwrite',
+      collision: 'skip',
     })
+  })
+
+  it('createJob can be told to overwrite', async () => {
+    const { api, fetchMock } = apiWith({ body: { job_id: 'J1' } })
+    await api.createJob('H1', 'movie', 'Film (2024)', 'overwrite')
+    const init = fetchMock.mock.calls[0][1] as RequestInit
+    expect(JSON.parse(init.body as string).collision).toBe('overwrite')
   })
 
   it('surfaces an API error detail', async () => {
@@ -141,4 +157,10 @@ it('labels several seasons with their counts', () => {
 
 it('turns epoch seconds into a local time', () => {
   expect(jobTime(1755610000)).toBe(new Date(1755610000000).toLocaleString())
+})
+
+it('knows which kinds merge into their destination', () => {
+  expect(mergesIntoDestination('series')).toBe(true)
+  expect(mergesIntoDestination('cartoon_series')).toBe(true)
+  expect(mergesIntoDestination('movie')).toBe(false)
 })
