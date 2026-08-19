@@ -14,6 +14,13 @@ export function Wizard({ api, torrent, onClose }: Readonly<{ api: Api; torrent: 
   const [started, setStarted] = useState('')
 
   useEffect(() => {
+    // <dialog open> is not modal, so the browser does not handle Escape for us.
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  useEffect(() => {
     let active = true
     api.search(torrent.name).then(
       (r) => active && setCandidates(r.candidates),
@@ -47,12 +54,15 @@ export function Wizard({ api, torrent, onClose }: Readonly<{ api: Api; torrent: 
           <button
             type="button"
             key={c.tmdb_id}
-            className="list-group-item list-group-item-action text-start text-break"
+            className="list-group-item list-group-item-action text-start text-break d-flex gap-2"
             onClick={() => start(c)}
           >
-            <span className="fw-semibold">{candidateName(c)}</span>
-            <span className="badge text-bg-light ms-2">{KIND_LABEL[c.kind] ?? c.kind}</span>
-            {c.overview && <small className="text-body-secondary d-block">{c.overview}</small>}
+            {c.poster && <img src={c.poster} alt="" width={46} loading="lazy" className="rounded flex-shrink-0" />}
+            <span>
+              <span className="fw-semibold">{candidateName(c)}</span>
+              <span className="badge text-bg-light ms-2">{KIND_LABEL[c.kind] ?? c.kind}</span>
+              {c.overview && <small className="text-body-secondary d-block">{c.overview}</small>}
+            </span>
           </button>
         ))}
       </div>

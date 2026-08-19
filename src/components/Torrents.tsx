@@ -51,7 +51,7 @@ export function Torrents({ api, onPick }: Readonly<{ api: Api; onPick: (t: Torre
                 <span className="fw-semibold">{t.name}</span>
                 <br />
                 <small className="text-body-secondary">
-                  {t.is_multi ? 'folder' : 'file'} · ↵ send to Plex
+                  {t.is_multi ? 'folder' : 'file'} · send to Plex
                 </small>
               </span>
               <span className="badge text-bg-secondary rounded-pill flex-shrink-0">{humanSize(t.size)}</span>

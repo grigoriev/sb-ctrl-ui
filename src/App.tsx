@@ -5,10 +5,17 @@ import { Wizard } from './components/Wizard'
 import { Jobs } from './components/Jobs'
 import { Login } from './components/Login'
 
-type Tab = 'torrents' | 'jobs'
+const TABS = ['torrents', 'jobs'] as const
+type Tab = (typeof TABS)[number]
+
+/** The tab named by the url fragment. A reload keeps the user where they were. */
+function tabFromHash(hash: string): Tab {
+  const name = hash.replace(/^#/, '')
+  return (TABS as readonly string[]).includes(name) ? (name as Tab) : 'torrents'
+}
 
 function App() {
-  const [tab, setTab] = useState<Tab>('torrents')
+  const [tab, setTab] = useState<Tab>(() => tabFromHash(window.location.hash))
   const [picked, setPicked] = useState<Torrent | null>(null)
   const [identity, setIdentity] = useState<Identity | null>(null)
   const api = useMemo(() => new Api(runtimeConfig()), [])
@@ -18,6 +25,12 @@ function App() {
   }, [api])
 
   useEffect(refresh, [refresh])
+
+  useEffect(() => {
+    const onHash = () => setTab(tabFromHash(window.location.hash))
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
+  }, [])
 
   async function signOut() {
     await api.logout().catch(() => undefined)
@@ -32,12 +45,15 @@ function App() {
           <>
             {/* On a phone the tabs take the second row and stretch across it. */}
             <ul className="nav nav-pills nav-fill flex-grow-1 flex-sm-grow-0">
-              {(['torrents', 'jobs'] as Tab[]).map((t) => (
+              {TABS.map((t) => (
                 <li className="nav-item" key={t}>
                   <button
                     type="button"
                     className={tab === t ? 'nav-link active' : 'nav-link'}
-                    onClick={() => setTab(t)}
+                    onClick={() => {
+                      window.location.hash = t
+                      setTab(t)
+                    }}
                   >
                     {t[0].toUpperCase() + t.slice(1)}
                   </button>
