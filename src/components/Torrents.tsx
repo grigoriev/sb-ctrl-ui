@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Api, humanSize, type Torrent } from '../api'
+import { Api, humanSize, inFlight, type Torrent } from '../api'
+import { Ring } from './Ring'
 
 export function Torrents({ api, onPick }: Readonly<{ api: Api; onPick: (t: Torrent) => void }>) {
   const [items, setItems] = useState<Torrent[] | null>(null)
@@ -51,10 +52,14 @@ export function Torrents({ api, onPick }: Readonly<{ api: Api; onPick: (t: Torre
                 <span className="fw-semibold">{t.name}</span>
                 <br />
                 <small className="text-body-secondary">
-                  {t.is_multi ? 'folder' : 'file'} · send to Plex
+                  {t.is_multi ? 'folder' : 'file'} · {t.delivered ? 'already in Plex' : 'send to Plex'}
                 </small>
               </span>
-              <span className="badge text-bg-secondary rounded-pill flex-shrink-0">{humanSize(t.size)}</span>
+              <span className="d-flex align-items-center gap-2 flex-shrink-0">
+                {t.delivered && <span className="badge text-bg-success rounded-pill">in Plex</span>}
+                {t.job && inFlight(t.job.state) && <Ring pct={t.job.pct ?? 0} />}
+                <span className="badge text-bg-secondary rounded-pill">{humanSize(t.size)}</span>
+              </span>
             </button>
           ))}
         </div>

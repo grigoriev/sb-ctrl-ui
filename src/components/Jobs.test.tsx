@@ -105,3 +105,47 @@ it('shows the seasons of a job that has no size yet', async () => {
   render(<Jobs api={api} />)
   expect(await screen.findByText('Season 1: 2 episodes')).toBeInTheDocument()
 })
+
+it('offers retry and the log for a stalled job', async () => {
+  const jobs: Job[] = [{ id: 'J5', name: 'Show', state: 'stalled', pct: 35, error: 'the worker stopped' }]
+  const api = {
+    jobs: vi.fn().mockResolvedValue({ jobs }),
+    jobLog: vi.fn().mockResolvedValue({ log: 'lftp: connection reset' }),
+  } as unknown as Api
+  render(<Jobs api={api} />)
+  expect(await screen.findByText('stalled')).toBeInTheDocument()
+  await userEvent.click(screen.getByText('Log'))
+  expect(await screen.findByText('lftp: connection reset')).toBeInTheDocument()
+  await userEvent.click(screen.getByText('Hide log'))
+  expect(screen.queryByText('lftp: connection reset')).toBeNull()
+})
+
+it('says so when a failed job wrote no log', async () => {
+  const jobs: Job[] = [{ id: 'J6', name: 'Show', state: 'failed', error: 'died' }]
+  const api = {
+    jobs: vi.fn().mockResolvedValue({ jobs }),
+    jobLog: vi.fn().mockResolvedValue({ log: '' }),
+  } as unknown as Api
+  render(<Jobs api={api} />)
+  await userEvent.click(await screen.findByText('Log'))
+  expect(await screen.findByText('the job wrote no log')).toBeInTheDocument()
+})
+
+it('reports a log that cannot be read', async () => {
+  const jobs: Job[] = [{ id: 'J7', name: 'Show', state: 'failed' }]
+  const api = {
+    jobs: vi.fn().mockResolvedValue({ jobs }),
+    jobLog: vi.fn().mockRejectedValue(new Error('no log for you')),
+  } as unknown as Api
+  render(<Jobs api={api} />)
+  await userEvent.click(await screen.findByText('Log'))
+  expect(await screen.findByRole('alert')).toHaveTextContent('no log for you')
+})
+
+it('leaves a done job without a log button', async () => {
+  const jobs: Job[] = [{ id: 'J8', name: 'Show', state: 'done', pct: 100 }]
+  const api = { jobs: vi.fn().mockResolvedValue({ jobs }) } as unknown as Api
+  render(<Jobs api={api} />)
+  expect(await screen.findByText('Show')).toBeInTheDocument()
+  expect(screen.queryByText('Log')).toBeNull()
+})

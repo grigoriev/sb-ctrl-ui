@@ -3,8 +3,14 @@ import { Api, humanSize, jobTime, seasonsLabel, type Job } from '../api'
 
 const STATE_BADGE: Record<string, string> = {
   failed: 'text-bg-danger',
+  stalled: 'text-bg-warning',
   done: 'text-bg-success',
   active: 'text-bg-primary',
+}
+
+/** A job that ended badly can be run again, and is worth a look at its log. */
+function endedBadly(state: string): boolean {
+  return state === 'failed' || state === 'stalled'
 }
 
 /** The one line under the bar: what came down, how much of it, and when. */
@@ -22,6 +28,7 @@ function metaLine(j: Job): string {
 export function Jobs({ api }: Readonly<{ api: Api }>) {
   const [jobs, setJobs] = useState<Job[] | null>(null)
   const [error, setError] = useState('')
+  const [log, setLog] = useState<{ id: string; text: string } | null>(null)
 
   const load = useCallback(() => {
     api.jobs().then(
@@ -75,14 +82,35 @@ export function Jobs({ api }: Readonly<{ api: Api }>) {
             </small>
             {metaLine(j) && <small className="text-body-secondary d-block">{metaLine(j)}</small>}
             {j.dest && <small className="text-body-secondary d-block text-break font-monospace">{j.dest}</small>}
+            {log?.id === j.id && (
+              <pre className="bg-body-tertiary border rounded p-2 mt-2 small overflow-auto" style={{ maxHeight: 260 }}>
+                {log.text || 'the job wrote no log'}
+              </pre>
+            )}
             <div className="d-flex gap-2 mt-2">
-              {j.state === 'failed' && (
+              {endedBadly(j.state) && (
                 <button
                   type="button"
                   className="btn btn-sm btn-outline-secondary"
                   onClick={() => api.retry(j.id).then(load)}
                 >
                   Retry
+                </button>
+              )}
+              {endedBadly(j.state) && (
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline-secondary"
+                  onClick={() =>
+                    log?.id === j.id
+                      ? setLog(null)
+                      : api.jobLog(j.id).then(
+                          (r) => setLog({ id: j.id, text: r.log }),
+                          (e: Error) => setError(e.message),
+                        )
+                  }
+                >
+                  {log?.id === j.id ? 'Hide log' : 'Log'}
                 </button>
               )}
               {/* A running job is refused by the server, so do not offer it. */}
