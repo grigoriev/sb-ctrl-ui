@@ -16,8 +16,10 @@ container environment, never from the code or the browser.
 
 ## Views
 
-- **Torrents** — completed torrents, filterable; click one to open the
-  Send-to-Plex wizard (pick the TMDb match, start the transfer).
+- **Torrents** — completed torrents, filterable. Each row says what Plex
+  already holds of it and carries its own Send-to-Plex button, which opens the
+  wizard: pick the TMDb match, then press Start transfer. A running transfer
+  shows its percent, rate and ETA in the row, refreshed from the job list.
 - **Jobs** — transfer jobs with state / progress / ETA; retry a failed one.
 - **Sign in** — shown when the API reports `login_required`. The session lives in
   an HttpOnly cookie the server sets, so the browser stores no credentials.

@@ -29,13 +29,19 @@ const candidates: Candidate[] = [
   },
 ]
 
+/** Pick a candidate, then press the one button that starts anything. */
+async function pickAndStart(name: string) {
+  await userEvent.click(await screen.findByText(name))
+  await userEvent.click(screen.getByRole('button', { name: 'Start transfer' }))
+}
+
 it('shows candidates and starts a transfer', async () => {
   const api = {
     search: vi.fn().mockResolvedValue({ guess: {}, candidates }),
     createJob: vi.fn().mockResolvedValue({ job_id: 'J1' }),
   } as unknown as Api
   render(<Wizard api={api} torrent={torrent} onClose={vi.fn()} />)
-  await userEvent.click(await screen.findByText('Some Movie (2024)'))
+  await pickAndStart('Some Movie (2024)')
   expect(await screen.findByRole('status')).toHaveTextContent('Transfer started: Some Movie (2024)')
   expect(api.createJob).toHaveBeenCalledWith('H1', 'movie', 'Some Movie (2024)', 'skip')
 })
@@ -59,7 +65,7 @@ it('reports a start error and closes', async () => {
   } as unknown as Api
   const onClose = vi.fn()
   render(<Wizard api={api} torrent={torrent} onClose={onClose} />)
-  await userEvent.click(await screen.findByText('Some Movie (2024)'))
+  await pickAndStart('Some Movie (2024)')
   expect(await screen.findByRole('alert')).toHaveTextContent('nope')
   await userEvent.click(screen.getByLabelText('Close'))
   expect(onClose).toHaveBeenCalled()
@@ -91,7 +97,7 @@ it('asks before it replaces a film that is already there', async () => {
       .mockResolvedValueOnce({ job_id: 'J1' }),
   } as unknown as Api
   render(<Wizard api={api} torrent={torrent} onClose={vi.fn()} />)
-  await userEvent.click(await screen.findByText('Some Movie (2024)'))
+  await pickAndStart('Some Movie (2024)')
   expect(await screen.findByRole('alert')).toHaveTextContent('already in the library')
   expect(screen.getByText('/media/movies/Some Movie (2024)')).toBeInTheDocument()
 
@@ -107,7 +113,7 @@ it('offers to add episodes to a show that is already there', async () => {
     createJob: vi.fn().mockResolvedValue({ skipped: true, dest_path: '/media/series/Some Movie (2024)' }),
   } as unknown as Api
   render(<Wizard api={api} torrent={torrent} onClose={vi.fn()} />)
-  await userEvent.click(await screen.findByText('Some Movie (2024)'))
+  await pickAndStart('Some Movie (2024)')
   expect(await screen.findByRole('alert')).toHaveTextContent('show is already in the library')
   expect(screen.getByRole('button', { name: 'Add episodes' })).toBeInTheDocument()
 })
@@ -118,7 +124,7 @@ it('goes back to the list from the warning', async () => {
     createJob: vi.fn().mockResolvedValue({ skipped: true, dest_path: '/media/movies/X' }),
   } as unknown as Api
   render(<Wizard api={api} torrent={torrent} onClose={vi.fn()} />)
-  await userEvent.click(await screen.findByText('Some Movie (2024)'))
+  await pickAndStart('Some Movie (2024)')
   await userEvent.click(await screen.findByRole('button', { name: 'Back' }))
   expect(await screen.findByText('Some Movie (2024)')).toBeInTheDocument()
 })
@@ -129,6 +135,30 @@ it('warns even when the server names no path', async () => {
     createJob: vi.fn().mockResolvedValue({ skipped: true }),
   } as unknown as Api
   render(<Wizard api={api} torrent={torrent} onClose={vi.fn()} />)
-  await userEvent.click(await screen.findByText('Some Movie (2024)'))
+  await pickAndStart('Some Movie (2024)')
   expect(await screen.findByRole('alert')).toHaveTextContent('already in the library')
+})
+
+it('starts nothing until a candidate is picked', async () => {
+  const api = {
+    search: vi.fn().mockResolvedValue({ guess: {}, candidates }),
+    createJob: vi.fn(),
+  } as unknown as Api
+  render(<Wizard api={api} torrent={torrent} onClose={vi.fn()} />)
+  await screen.findByText('Some Movie (2024)')
+  const start = screen.getByRole('button', { name: 'Start transfer' })
+  expect(start).toBeDisabled()
+  await userEvent.click(screen.getByText('Some Movie (2024)'))
+  expect(screen.getByText('Some Movie (2024)').closest('button')).toHaveAttribute('aria-pressed', 'true')
+  expect(start).toBeEnabled()
+  expect(api.createJob).not.toHaveBeenCalled()
+})
+
+it('cancels without starting anything', async () => {
+  const api = { search: vi.fn().mockResolvedValue({ guess: {}, candidates }) } as unknown as Api
+  const onClose = vi.fn()
+  render(<Wizard api={api} torrent={torrent} onClose={onClose} />)
+  await screen.findByText('Some Movie (2024)')
+  await userEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+  expect(onClose).toHaveBeenCalled()
 })
