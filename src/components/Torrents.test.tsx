@@ -22,8 +22,17 @@ it('lists torrents and starts one from its own button', async () => {
   const onPick = vi.fn()
   render(<Torrents api={api} onPick={onPick} />)
   expect(await screen.findByText('Some Movie')).toBeInTheDocument()
-  await userEvent.click(screen.getAllByRole('button', { name: 'Send to Plex' })[1])
-  expect(onPick).toHaveBeenCalledWith(torrents[1])
+  await userEvent.click(screen.getByRole('button', { name: 'Send to Plex: Some Show' }))
+  expect(onPick).toHaveBeenCalledWith(torrents[1], 'send')
+})
+
+it('opens the description from its own button', async () => {
+  const api = fakeApi(torrents)
+  const onPick = vi.fn()
+  render(<Torrents api={api} onPick={onPick} />)
+  await screen.findByText('Some Movie')
+  await userEvent.click(screen.getByRole('button', { name: 'Details of Some Movie' }))
+  expect(onPick).toHaveBeenCalledWith(torrents[0], 'details')
 })
 
 it('does not start a transfer when the row is clicked', async () => {
@@ -68,14 +77,14 @@ it('marks a torrent that is already in the library', async () => {
   const items: Torrent[] = [{ ...torrents[0], delivered: true, library: { have: 1, total: 1 } }]
   render(<Torrents api={fakeApi(items)} onPick={vi.fn()} />)
   expect(await screen.findByText('in Plex')).toBeInTheDocument()
-  expect(screen.getByRole('button', { name: 'Send again' })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Send again: Some Movie' })).toBeInTheDocument()
 })
 
 it('says how much of a pack the library holds', async () => {
   const items: Torrent[] = [{ ...torrents[1], library: { have: 3, total: 8 } }]
   render(<Torrents api={fakeApi(items)} onPick={vi.fn()} />)
   expect(await screen.findByText('3/8 in Plex')).toBeInTheDocument()
-  expect(screen.getByRole('button', { name: 'Send to Plex' })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Send to Plex: Some Show' })).toBeInTheDocument()
 })
 
 it('follows a running transfer from the job list', async () => {
@@ -83,7 +92,7 @@ it('follows a running transfer from the job list', async () => {
   render(<Torrents api={fakeApi(torrents, jobs)} onPick={vi.fn()} />)
   expect(await screen.findByRole('img', { name: '35% transferred' })).toBeInTheDocument()
   expect(screen.getByText('35% · 12.4 MB/s · ETA 3m')).toBeInTheDocument()
-  expect(screen.getByRole('button', { name: 'Transferring…' })).toBeDisabled()
+  expect(screen.getByRole('button', { name: 'Transferring…: Some Movie' })).toBeDisabled()
 })
 
 it('keeps the ring moving as the job reports more', async () => {

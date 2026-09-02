@@ -1,5 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Api, humanSize, inFlight, libraryLabel, progressLabel, withJobs, type Job, type Torrent } from '../api'
+import {
+  Api,
+  humanSize,
+  inFlight,
+  libraryLabel,
+  progressLabel,
+  withJobs,
+  type Intent,
+  type Job,
+  type Torrent,
+} from '../api'
 import { Ring } from './Ring'
 
 /** How often the job list is asked what the running transfers are doing. */
@@ -21,7 +31,10 @@ function startLabel(t: Torrent): string {
   return t.delivered ? 'Send again' : 'Send to Plex'
 }
 
-export function Torrents({ api, onPick }: Readonly<{ api: Api; onPick: (t: Torrent) => void }>) {
+export function Torrents({
+  api,
+  onPick,
+}: Readonly<{ api: Api; onPick: (t: Torrent, intent: Intent) => void }>) {
   const [items, setItems] = useState<Torrent[] | null>(null)
   const [jobs, setJobs] = useState<Job[]>([])
   const [error, setError] = useState('')
@@ -102,9 +115,18 @@ export function Torrents({ api, onPick }: Readonly<{ api: Api; onPick: (t: Torre
                 <span className="badge text-bg-secondary rounded-pill d-none d-sm-inline">{humanSize(t.size)}</span>
                 <button
                   type="button"
+                  className="btn btn-sm btn-outline-secondary"
+                  aria-label={`Details of ${t.name}`}
+                  onClick={() => onPick(t, 'details')}
+                >
+                  Details
+                </button>
+                <button
+                  type="button"
                   className={t.delivered ? 'btn btn-sm btn-outline-primary' : 'btn btn-sm btn-primary'}
+                  aria-label={`${startLabel(t)}: ${t.name}`}
                   disabled={isRunning(t)}
-                  onClick={() => onPick(t)}
+                  onClick={() => onPick(t, 'send')}
                 >
                   {startLabel(t)}
                 </button>
