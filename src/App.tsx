@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Api, runtimeConfig, type Identity, type Torrent } from './api'
+import { Api, runtimeConfig, type Identity, type Intent, type Torrent } from './api'
 import { Torrents } from './components/Torrents'
 import { Wizard } from './components/Wizard'
 import { Jobs } from './components/Jobs'
@@ -16,7 +16,7 @@ function tabFromHash(hash: string): Tab {
 
 function App() {
   const [tab, setTab] = useState<Tab>(() => tabFromHash(window.location.hash))
-  const [picked, setPicked] = useState<Torrent | null>(null)
+  const [picked, setPicked] = useState<{ torrent: Torrent; intent: Intent } | null>(null)
   const [identity, setIdentity] = useState<Identity | null>(null)
   const api = useMemo(() => new Api(runtimeConfig()), [])
 
@@ -72,12 +72,16 @@ function App() {
         {identity?.login_required && <Login api={api} onDone={refresh} />}
         {identity && !identity.login_required && (
           <>
-            {tab === 'torrents' && <Torrents api={api} onPick={setPicked} />}
+            {tab === 'torrents' && (
+              <Torrents api={api} onPick={(torrent, intent) => setPicked({ torrent, intent })} />
+            )}
             {tab === 'jobs' && <Jobs api={api} />}
           </>
         )}
       </main>
-      {picked && <Wizard api={api} torrent={picked} onClose={() => setPicked(null)} />}
+      {picked && (
+        <Wizard api={api} torrent={picked.torrent} intent={picked.intent} onClose={() => setPicked(null)} />
+      )}
     </div>
   )
 }

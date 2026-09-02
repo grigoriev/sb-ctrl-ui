@@ -76,6 +76,15 @@ describe('Api', () => {
     expect(fetchMock.mock.calls[0][0]).toBe('http://host/search?name=a%20b')
   })
 
+  it('plan previews a transfer without starting it', async () => {
+    const { api, fetchMock } = apiWith({ body: { dest_path: '/data/media/movies/Film (2024)', collision: false } })
+    const out = await api.plan('H1', 'movie', 'Film (2024)')
+    expect(out.dest_path).toBe('/data/media/movies/Film (2024)')
+    const init = fetchMock.mock.calls[0][1] as RequestInit
+    expect(init.method).toBe('POST')
+    expect(JSON.parse(init.body as string)).toEqual({ hash: 'H1', kind: 'movie', name: 'Film (2024)' })
+  })
+
   it('createJob posts the body', async () => {
     const { api, fetchMock } = apiWith({ body: { job_id: 'J1' } })
     const out = await api.createJob('H1', 'movie', 'Film (2024)')

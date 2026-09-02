@@ -43,7 +43,7 @@ it('switches between tabs', async () => {
 it('opens and closes the wizard', async () => {
   render(<App />)
   await screen.findByText('Movie')
-  await userEvent.click(screen.getByRole('button', { name: 'Send to Plex' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Send to Plex: Movie' }))
   expect(await screen.findByRole('dialog')).toBeInTheDocument()
   await userEvent.click(screen.getByLabelText('Close'))
   expect(screen.queryByRole('dialog')).toBeNull()

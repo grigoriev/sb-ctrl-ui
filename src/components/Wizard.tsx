@@ -1,11 +1,60 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { Api, candidateName, mergesIntoDestination, type Candidate, type Collision, type Torrent } from '../api'
+import {
+  Api,
+  candidateName,
+  humanSize,
+  mergesIntoDestination,
+  type Candidate,
+  type Collision,
+  type Intent,
+  type PlanResult,
+  type Torrent,
+} from '../api'
 
 const KIND_LABEL: Record<string, string> = {
   movie: 'Movie',
   cartoon: 'Cartoon',
   series: 'Series',
   cartoon_series: 'Cartoon series',
+}
+
+/** The poster and the text of one TMDb match. */
+function Details({ candidate }: Readonly<{ candidate: Candidate }>) {
+  return (
+    <>
+      {/* align-items-start keeps the 2:3 poster from stretching to the row height. */}
+      {candidate.poster && (
+        <img
+          src={candidate.poster}
+          alt=""
+          width={70}
+          height={105}
+          loading="lazy"
+          className="rounded flex-shrink-0 object-fit-cover"
+        />
+      )}
+      <span>
+        <span className="fw-semibold">{candidateName(candidate)}</span>
+        <span className="badge text-bg-light ms-2">{KIND_LABEL[candidate.kind] ?? candidate.kind}</span>
+        {candidate.overview && <small className="text-body-secondary d-block">{candidate.overview}</small>}
+      </span>
+    </>
+  )
+}
+
+/** Where this lands, and what it does to whatever is there already. */
+function Destination({ plan, candidate }: Readonly<{ plan: PlanResult; candidate: Candidate }>) {
+  const merges = mergesIntoDestination(candidate.kind)
+  let note = ''
+  if (plan.collision) note = merges ? 'The show is already there; the pack adds to it.' : 'This replaces what is there.'
+  return (
+    <div className="mt-3 small text-body-secondary">
+      <div className="text-break">
+        Lands in <span className="font-monospace">{plan.dest_path}</span>
+      </div>
+      {note && <div className="text-warning-emphasis">{note}</div>}
+    </div>
+  )
 }
 
 /** Shown when the destination is taken, so nothing is replaced unasked. */
@@ -41,12 +90,20 @@ function Occupied({
   )
 }
 
-export function Wizard({ api, torrent, onClose }: Readonly<{ api: Api; torrent: Torrent; onClose: () => void }>) {
+export function Wizard({
+  api,
+  torrent,
+  intent = 'send',
+  onClose,
+}: Readonly<{ api: Api; torrent: Torrent; intent?: Intent; onClose: () => void }>) {
   const [candidates, setCandidates] = useState<Candidate[] | null>(null)
   const [error, setError] = useState('')
   const [started, setStarted] = useState('')
-  const [selected, setSelected] = useState<Candidate | null>(null)
+  const [chosen, setChosen] = useState<Candidate | null>(null)
+  const [plan, setPlan] = useState<PlanResult | null>(null)
   const [occupied, setOccupied] = useState<{ candidate: Candidate; dest: string } | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [mode, setMode] = useState<Intent>(intent)
 
   useEffect(() => {
     // <dialog open> is not modal, so the browser does not handle Escape for us.
@@ -58,7 +115,13 @@ export function Wizard({ api, torrent, onClose }: Readonly<{ api: Api; torrent: 
   useEffect(() => {
     let active = true
     api.search(torrent.name).then(
-      (r) => active && setCandidates(r.candidates),
+      (r) => {
+        if (!active) return
+        setCandidates(r.candidates)
+        // TMDb answers its best match first, and a release usually has only
+        // that one, so nothing has to be picked before starting.
+        setChosen(r.candidates[0] ?? null)
+      },
       (e: Error) => active && setError(e.message),
     )
     return () => {
@@ -66,7 +129,22 @@ export function Wizard({ api, torrent, onClose }: Readonly<{ api: Api; torrent: 
     }
   }, [api, torrent])
 
+  useEffect(() => {
+    if (!chosen) return undefined
+    let active = true
+    // The plan is a preview with no side effects: it says where this lands
+    // and whether something is there, before anything is started.
+    api.plan(torrent.hash, chosen.kind, candidateName(chosen)).then(
+      (p) => active && setPlan(p),
+      () => active && setPlan(null),
+    )
+    return () => {
+      active = false
+    }
+  }, [api, torrent, chosen])
+
   async function start(c: Candidate, collision: Collision = 'skip') {
+    setBusy(true)
     try {
       const result = await api.createJob(torrent.hash, c.kind, candidateName(c), collision)
       if (result.skipped) {
@@ -77,6 +155,8 @@ export function Wizard({ api, torrent, onClose }: Readonly<{ api: Api; torrent: 
       setStarted(candidateName(c))
     } catch (e) {
       setError((e as Error).message)
+    } finally {
+      setBusy(false)
     }
   }
 
@@ -95,38 +175,34 @@ export function Wizard({ api, torrent, onClose }: Readonly<{ api: Api; torrent: 
     body = <p className="text-body-secondary">Searching TMDb…</p>
   } else if (candidates.length === 0) {
     body = <p className="text-body-secondary">No TMDb matches</p>
+  } else if (candidates.length === 1) {
+    // One match is the normal case, and then there is nothing to choose.
+    body = (
+      <div className="card">
+        <div className="card-body d-flex align-items-start gap-3 text-break">
+          <Details candidate={candidates[0]} />
+        </div>
+      </div>
+    )
   } else {
     body = (
-      <div className="list-group">
-        {candidates.map((c) => (
-          <button
-            type="button"
-            key={c.tmdb_id}
-            aria-pressed={selected?.tmdb_id === c.tmdb_id}
-            className={`list-group-item list-group-item-action text-start text-break d-flex align-items-start gap-3${
-              selected?.tmdb_id === c.tmdb_id ? ' active' : ''
-            }`}
-            onClick={() => setSelected(c)}
-          >
-            {/* align-items-start keeps the 2:3 poster from stretching to the row height. */}
-            {c.poster && (
-              <img
-                src={c.poster}
-                alt=""
-                width={70}
-                height={105}
-                loading="lazy"
-                className="rounded flex-shrink-0 object-fit-cover"
+      <fieldset>
+        <legend className="fs-6 text-body-secondary">TMDb found more than one match</legend>
+        <div className="list-group">
+          {candidates.map((c) => (
+            <label key={c.tmdb_id} className="list-group-item d-flex align-items-start gap-3 text-break">
+              <input
+                className="form-check-input flex-shrink-0 mt-1"
+                type="radio"
+                name="candidate"
+                checked={chosen?.tmdb_id === c.tmdb_id}
+                onChange={() => setChosen(c)}
               />
-            )}
-            <span>
-              <span className="fw-semibold">{candidateName(c)}</span>
-              <span className="badge text-bg-light ms-2">{KIND_LABEL[c.kind] ?? c.kind}</span>
-              {c.overview && <small className="text-body-secondary d-block">{c.overview}</small>}
-            </span>
-          </button>
-        ))}
-      </div>
+              <Details candidate={c} />
+            </label>
+          ))}
+        </div>
+      </fieldset>
     )
   }
 
@@ -136,7 +212,12 @@ export function Wizard({ api, torrent, onClose }: Readonly<{ api: Api; torrent: 
       <div className="modal-dialog modal-lg modal-dialog-scrollable modal-fullscreen-sm-down">
         <div className="modal-content">
           <div className="modal-header">
-            <h2 className="modal-title fs-6 text-break">{torrent.name}</h2>
+            <div>
+              <h2 className="modal-title fs-6 text-break">{torrent.name}</h2>
+              <small className="text-body-secondary">
+                {torrent.is_multi ? 'folder' : 'file'} · {humanSize(torrent.size)}
+              </small>
+            </div>
             <button type="button" className="btn-close" aria-label="Close" onClick={onClose} />
           </div>
           <div className="modal-body">
@@ -146,22 +227,30 @@ export function Wizard({ api, torrent, onClose }: Readonly<{ api: Api; torrent: 
               </div>
             )}
             {body}
+            {!started && !occupied && plan && chosen && <Destination plan={plan} candidate={chosen} />}
           </div>
-          {/* The transfer starts here and nowhere else, so a stray click on a
-              card never sends 20 GB across the network. */}
-          {!started && !occupied && (
+          {/* The transfer starts from this footer and nowhere else, so reading
+              about a title never sends 20 GB across the network. */}
+          {!occupied && (
             <div className="modal-footer">
               <button type="button" className="btn btn-outline-secondary" onClick={onClose}>
-                Cancel
+                {started || mode === 'details' ? 'Close' : 'Cancel'}
               </button>
-              <button
-                type="button"
-                className="btn btn-primary"
-                disabled={!selected}
-                onClick={() => selected && start(selected)}
-              >
-                Start transfer
-              </button>
+              {!started && mode === 'details' && (
+                <button type="button" className="btn btn-primary" onClick={() => setMode('send')}>
+                  Send to Plex
+                </button>
+              )}
+              {!started && mode === 'send' && (
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  disabled={!chosen || busy}
+                  onClick={() => chosen && start(chosen)}
+                >
+                  {busy ? 'Starting…' : 'Start transfer'}
+                </button>
+              )}
             </div>
           )}
         </div>

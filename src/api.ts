@@ -90,6 +90,15 @@ export interface SearchResult {
 
 export type Collision = 'skip' | 'overwrite'
 
+/** Why the title dialog was opened: to read about the title, or to send it. */
+export type Intent = 'details' | 'send'
+
+/** The preview of a transfer: where it lands, and whether that is taken. */
+export interface PlanResult {
+  dest_path: string
+  collision: boolean
+}
+
 export interface CreateJobResult {
   job_id?: string
   skipped?: boolean
@@ -243,6 +252,11 @@ export class Api {
 
   search(name: string): Promise<SearchResult> {
     return this.request('GET', `/search?name=${encodeURIComponent(name)}`)
+  }
+
+  /** Preview a transfer. No side effects: it only says where this would land. */
+  plan(hash: string, kind: string, name: string): Promise<PlanResult> {
+    return this.request('POST', '/plan', { hash, kind, name })
   }
 
   /**
