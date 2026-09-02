@@ -3,6 +3,14 @@ export interface TorrentJob {
   id: string
   state: string
   pct?: number
+  rate?: string
+  eta?: string
+}
+
+/** How much of a release the library already holds. Absent before 0.4.0. */
+export interface LibraryMatch {
+  have: number
+  total: number
 }
 
 export interface Torrent {
@@ -15,6 +23,46 @@ export interface Torrent {
   job?: TorrentJob
   /** True while the transferred title still sits in the library. */
   delivered?: boolean
+  library?: LibraryMatch
+}
+
+/** The release a remote path names: its last component. */
+export function releaseName(baseRel: string): string {
+  const parts = baseRel.replace(/\/+$/, '').split('/')
+  return parts[parts.length - 1]
+}
+
+/**
+ * Live job state merged into the torrent rows.
+ *
+ * The job list is cheap to poll; the torrent list is not, because it asks the
+ * seedbox. So the rows are fetched once and kept moving from the jobs.
+ */
+export function withJobs(items: Torrent[], jobs: Job[]): Torrent[] {
+  const index = new Map<string, Job>()
+  for (const job of jobs) {
+    if (job.hash) index.set(job.hash, job)
+    if (job.release) index.set(job.release, job)
+  }
+  return items.map((t) => {
+    const job = index.get(t.hash) ?? index.get(releaseName(t.base_rel))
+    if (!job) return t
+    return { ...t, job: { id: job.id, state: job.state, pct: job.pct, rate: job.rate, eta: job.eta } }
+  })
+}
+
+/** What the library holds of a release: all of it, part of it, or nothing. */
+export function libraryLabel(t: Torrent): string {
+  if (t.delivered) return 'in Plex'
+  if (t.library && t.library.have > 0) return `${t.library.have}/${t.library.total} in Plex`
+  return ''
+}
+
+/** The one line a running transfer shows in the list. */
+export function progressLabel(job: TorrentJob): string {
+  return [job.pct == null ? '' : `${job.pct}%`, job.rate ?? '', job.eta ? `ETA ${job.eta}` : '']
+    .filter(Boolean)
+    .join(' · ')
 }
 
 /** Whether a transfer is still on its way, and so worth a progress ring. */
@@ -68,6 +116,7 @@ export interface Job {
   error?: string
   /** The fields below arrive from sb-ctrl 0.3.0 on; older jobs lack them. */
   release?: string
+  hash?: string
   kind?: string
   size?: number
   dest?: string

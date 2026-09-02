@@ -45,6 +45,7 @@ export function Wizard({ api, torrent, onClose }: Readonly<{ api: Api; torrent: 
   const [candidates, setCandidates] = useState<Candidate[] | null>(null)
   const [error, setError] = useState('')
   const [started, setStarted] = useState('')
+  const [selected, setSelected] = useState<Candidate | null>(null)
   const [occupied, setOccupied] = useState<{ candidate: Candidate; dest: string } | null>(null)
 
   useEffect(() => {
@@ -101,8 +102,11 @@ export function Wizard({ api, torrent, onClose }: Readonly<{ api: Api; torrent: 
           <button
             type="button"
             key={c.tmdb_id}
-            className="list-group-item list-group-item-action text-start text-break d-flex align-items-start gap-3"
-            onClick={() => start(c)}
+            aria-pressed={selected?.tmdb_id === c.tmdb_id}
+            className={`list-group-item list-group-item-action text-start text-break d-flex align-items-start gap-3${
+              selected?.tmdb_id === c.tmdb_id ? ' active' : ''
+            }`}
+            onClick={() => setSelected(c)}
           >
             {/* align-items-start keeps the 2:3 poster from stretching to the row height. */}
             {c.poster && (
@@ -143,6 +147,23 @@ export function Wizard({ api, torrent, onClose }: Readonly<{ api: Api; torrent: 
             )}
             {body}
           </div>
+          {/* The transfer starts here and nowhere else, so a stray click on a
+              card never sends 20 GB across the network. */}
+          {!started && !occupied && (
+            <div className="modal-footer">
+              <button type="button" className="btn btn-outline-secondary" onClick={onClose}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                disabled={!selected}
+                onClick={() => selected && start(selected)}
+              >
+                Start transfer
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </dialog>
