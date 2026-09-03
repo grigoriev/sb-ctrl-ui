@@ -19,8 +19,10 @@ container environment, never from the code or the browser.
 - **Torrents** — completed torrents, filterable, across the full width so a
   release name fits on one line. A badge says what Plex already holds of it,
   and one button opens the dialog: the TMDb description, the destination the
-  transfer lands in, and a warning when something is there already. Nothing
-  leaves until **Start transfer**. A running transfer shows its percent, rate
+  transfer lands in, and a warning when something is there already. TMDb only
+  proposes: the search query, the name in the library and the library itself
+  are all editable, and the destination line follows them. Nothing leaves
+  until **Start transfer**. A running transfer shows its percent, rate
   and ETA in the row, refreshed from the job list.
 The header names both builds, `ui <version> · api <version>`: the UI version
 is baked in from package.json, the API version comes from `GET /health`.

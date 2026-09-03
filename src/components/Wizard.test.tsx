@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { expect, it, vi } from 'vitest'
 import { Wizard } from './Wizard'
@@ -74,6 +74,7 @@ it('says nothing about the destination when the preview fails', async () => {
   const api = fakeApi([one], { plan: vi.fn().mockRejectedValue(new Error('no')) })
   render(<Wizard api={api} torrent={torrent} onClose={vi.fn()} />)
   await screen.findByText('Some Movie (2024)')
+  await waitFor(() => expect(api.plan).toHaveBeenCalled())
   expect(screen.queryByText(/Lands in/)).toBeNull()
 })
 
@@ -114,10 +115,64 @@ it('cannot be started twice', async () => {
   expect(api.createJob).toHaveBeenCalledTimes(1)
 })
 
-it('shows no matches', async () => {
-  render(<Wizard api={fakeApi([])} torrent={torrent} onClose={vi.fn()} />)
-  expect(await screen.findByText('No TMDb matches')).toBeInTheDocument()
+it('can still send a release TMDb does not know', async () => {
+  const api = fakeApi([])
+  render(<Wizard api={api} torrent={torrent} onClose={vi.fn()} />)
+  expect(await screen.findByText(/No TMDb matches/)).toBeInTheDocument()
+  // the release name stands in, so the transfer is not blocked
+  expect(screen.getByLabelText('Name in the library')).toHaveValue('Some Movie 2024')
+  await userEvent.click(screen.getByRole('button', { name: 'Start transfer' }))
+  expect(api.createJob).toHaveBeenCalledWith('H1', 'movie', 'Some Movie 2024', 'skip')
+})
+
+it('starts nothing without a name', async () => {
+  render(<Wizard api={fakeApi([one])} torrent={torrent} onClose={vi.fn()} />)
+  await userEvent.clear(await screen.findByLabelText('Name in the library'))
   expect(screen.getByRole('button', { name: 'Start transfer' })).toBeDisabled()
+})
+
+it('searches TMDb again under a name the release does not carry', async () => {
+  const other: Candidate = { ...one, tmdb_id: 5, original_title: 'The Right One', year: '2019' }
+  const api = fakeApi([one], {
+    search: vi
+      .fn()
+      .mockResolvedValueOnce({ guess: {}, candidates: [one] })
+      .mockResolvedValueOnce({ guess: {}, candidates: [other] }),
+  })
+  render(<Wizard api={api} torrent={torrent} onClose={vi.fn()} />)
+  await screen.findByText('Some Movie (2024)')
+  const query = screen.getByLabelText('Search TMDb for')
+  await userEvent.clear(query)
+  await userEvent.type(query, 'the right one')
+  await userEvent.click(screen.getByRole('button', { name: 'Search' }))
+  expect(await screen.findByText('The Right One (2019)')).toBeInTheDocument()
+  expect(screen.getByLabelText('Name in the library')).toHaveValue('The Right One (2019)')
+  expect(api.search).toHaveBeenLastCalledWith('the right one')
+})
+
+it('sends under a corrected name and library', async () => {
+  const api = fakeApi([one])
+  render(<Wizard api={api} torrent={torrent} onClose={vi.fn()} />)
+  const field = await screen.findByLabelText('Name in the library')
+  await userEvent.clear(field)
+  await userEvent.type(field, 'The Right One (2019)')
+  await userEvent.selectOptions(screen.getByLabelText('Library'), 'cartoon_series')
+  await userEvent.click(screen.getByRole('button', { name: 'Start transfer' }))
+  expect(api.createJob).toHaveBeenCalledWith('H1', 'cartoon_series', 'The Right One (2019)', 'skip')
+})
+
+it('previews the destination of a corrected name', async () => {
+  const api = fakeApi([one], {
+    plan: vi
+      .fn()
+      .mockResolvedValueOnce(PLAN)
+      .mockResolvedValue({ dest_path: '/data/media/cartoons/Toon (2019)/Toon (2019).mkv', collision: false }),
+  })
+  render(<Wizard api={api} torrent={torrent} onClose={vi.fn()} />)
+  await screen.findByText(PLAN.dest_path)
+  await userEvent.selectOptions(screen.getByLabelText('Library'), 'cartoon')
+  expect(await screen.findByText('/data/media/cartoons/Toon (2019)/Toon (2019).mkv')).toBeInTheDocument()
+  expect(api.plan).toHaveBeenLastCalledWith('H1', 'cartoon', 'Some Movie (2024)')
 })
 
 it('reports a search error', async () => {
