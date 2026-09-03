@@ -181,6 +181,12 @@ export function humanSize(bytes: number): string {
   return `${Math.floor(bytes / 1024)} KB`
 }
 
+/** What the server says about itself. Needs no authentication. */
+export interface Health {
+  ok: boolean
+  version: string
+}
+
 export interface Identity {
   login_required: boolean
   user: string | null
@@ -229,6 +235,10 @@ export class Api {
       throw new HttpError(data.detail || data.error || `HTTP ${res.status}`, res.status)
     }
     return (await res.json()) as T
+  }
+
+  health(): Promise<Health> {
+    return this.request('GET', '/health')
   }
 
   me(): Promise<Identity> {

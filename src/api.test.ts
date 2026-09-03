@@ -70,6 +70,12 @@ describe('Api', () => {
     expect(fetchMock.mock.calls[0][0]).toBe('http://host/torrents')
   })
 
+  it('health reports the server version', async () => {
+    const { api, fetchMock } = apiWith({ body: { ok: true, version: '0.4.0' } })
+    expect((await api.health()).version).toBe('0.4.0')
+    expect(fetchMock.mock.calls[0][0]).toBe('http://host/health')
+  })
+
   it('search encodes the name', async () => {
     const { api, fetchMock } = apiWith({ body: { candidates: [] } })
     await api.search('a b')

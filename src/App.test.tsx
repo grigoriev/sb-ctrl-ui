@@ -9,12 +9,14 @@ import type { Identity } from './api'
 let identity: Identity
 let reachable: boolean
 let logoutFails: boolean
+let healthVersion: string
 
 beforeEach(() => {
   window.location.hash = ''
   identity = { login_required: false, user: null }
   reachable = true
   logoutFails = false
+  healthVersion = '9.9.9'
   vi.stubGlobal(
     'fetch',
     vi.fn(async (url: string) => {
@@ -23,7 +25,8 @@ beforeEach(() => {
       const path = new URL(url, 'http://localhost').pathname.replace(/^\/api/, '')
       if (path === '/logout' && logoutFails) throw new Error('down')
       let body: unknown = { jobs: [] }
-      if (path === '/me') body = identity
+      if (path === '/health') body = { ok: true, version: healthVersion }
+      else if (path === '/me') body = identity
       else if (path === '/torrents')
         body = { items: [{ hash: 'H1', name: 'Movie', size: 1, is_multi: false, base_rel: 'x', finished: 1 }] }
       else if (path.startsWith('/search')) body = { guess: {}, candidates: [] }
@@ -105,4 +108,16 @@ it('writes the chosen tab to the url', async () => {
   await screen.findByText('Movie')
   await userEvent.click(screen.getByRole('button', { name: 'Jobs' }))
   expect(window.location.hash).toBe('#jobs')
+})
+
+
+it('names the versions of both halves', async () => {
+  render(<App />)
+  expect(await screen.findByText(/api 9\.9\.9/)).toHaveTextContent(`ui ${__UI_VERSION__} · api 9.9.9`)
+})
+
+it('names its own version when the server does not answer', async () => {
+  reachable = false
+  render(<App />)
+  expect(await screen.findByText(`ui ${__UI_VERSION__}`)).toBeInTheDocument()
 })
