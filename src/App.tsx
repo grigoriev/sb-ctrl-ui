@@ -18,6 +18,7 @@ function App() {
   const [tab, setTab] = useState<Tab>(() => tabFromHash(window.location.hash))
   const [picked, setPicked] = useState<Torrent | null>(null)
   const [identity, setIdentity] = useState<Identity | null>(null)
+  const [apiVersion, setApiVersion] = useState('')
   const api = useMemo(() => new Api(runtimeConfig()), [])
 
   const refresh = useCallback(() => {
@@ -25,6 +26,14 @@ function App() {
   }, [api])
 
   useEffect(refresh, [refresh])
+
+  useEffect(() => {
+    // /health needs no login, so the pair of versions shows on the login page too.
+    api.health().then(
+      (h) => setApiVersion(h.version),
+      () => setApiVersion(''),
+    )
+  }, [api])
 
   useEffect(() => {
     const onHash = () => setTab(tabFromHash(window.location.hash))
@@ -41,6 +50,11 @@ function App() {
     <div className="app container-fluid px-3 px-lg-4 py-3">
       <header className="d-flex flex-wrap align-items-baseline gap-2 gap-sm-3 border-bottom pb-2 mb-3">
         <h1 className="h4 m-0">sb-ctrl</h1>
+        {/* Which build is running, so a report names a version. */}
+        <small className="text-body-secondary font-monospace">
+          ui {__UI_VERSION__}
+          {apiVersion && ` · api ${apiVersion}`}
+        </small>
         {identity && !identity.login_required && (
           <>
             {/* On a phone the tabs take the second row and stretch across it. */}

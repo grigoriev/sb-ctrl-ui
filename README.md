@@ -22,6 +22,9 @@ container environment, never from the code or the browser.
   transfer lands in, and a warning when something is there already. Nothing
   leaves until **Start transfer**. A running transfer shows its percent, rate
   and ETA in the row, refreshed from the job list.
+The header names both builds, `ui <version> · api <version>`: the UI version
+is baked in from package.json, the API version comes from `GET /health`.
+
 - **Jobs** — transfer jobs with state / progress / ETA; retry a failed one.
 - **Sign in** — shown when the API reports `login_required`. The session lives in
   an HttpOnly cookie the server sets, so the browser stores no credentials.
