@@ -6,7 +6,6 @@ import {
   mergesIntoDestination,
   type Candidate,
   type Collision,
-  type Intent,
   type PlanResult,
   type Torrent,
 } from '../api'
@@ -90,12 +89,7 @@ function Occupied({
   )
 }
 
-export function Wizard({
-  api,
-  torrent,
-  intent = 'send',
-  onClose,
-}: Readonly<{ api: Api; torrent: Torrent; intent?: Intent; onClose: () => void }>) {
+export function Wizard({ api, torrent, onClose }: Readonly<{ api: Api; torrent: Torrent; onClose: () => void }>) {
   const [candidates, setCandidates] = useState<Candidate[] | null>(null)
   const [error, setError] = useState('')
   const [started, setStarted] = useState('')
@@ -103,7 +97,6 @@ export function Wizard({
   const [plan, setPlan] = useState<PlanResult | null>(null)
   const [occupied, setOccupied] = useState<{ candidate: Candidate; dest: string } | null>(null)
   const [busy, setBusy] = useState(false)
-  const [mode, setMode] = useState<Intent>(intent)
 
   useEffect(() => {
     // <dialog open> is not modal, so the browser does not handle Escape for us.
@@ -234,14 +227,9 @@ export function Wizard({
           {!occupied && (
             <div className="modal-footer">
               <button type="button" className="btn btn-outline-secondary" onClick={onClose}>
-                {started || mode === 'details' ? 'Close' : 'Cancel'}
+                {started ? 'Close' : 'Cancel'}
               </button>
-              {!started && mode === 'details' && (
-                <button type="button" className="btn btn-primary" onClick={() => setMode('send')}>
-                  Send to Plex
-                </button>
-              )}
-              {!started && mode === 'send' && (
+              {!started && (
                 <button
                   type="button"
                   className="btn btn-primary"

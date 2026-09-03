@@ -23,16 +23,7 @@ it('lists torrents and starts one from its own button', async () => {
   render(<Torrents api={api} onPick={onPick} />)
   expect(await screen.findByText('Some Movie')).toBeInTheDocument()
   await userEvent.click(screen.getByRole('button', { name: 'Send to Plex: Some Show' }))
-  expect(onPick).toHaveBeenCalledWith(torrents[1], 'send')
-})
-
-it('opens the description from its own button', async () => {
-  const api = fakeApi(torrents)
-  const onPick = vi.fn()
-  render(<Torrents api={api} onPick={onPick} />)
-  await screen.findByText('Some Movie')
-  await userEvent.click(screen.getByRole('button', { name: 'Details of Some Movie' }))
-  expect(onPick).toHaveBeenCalledWith(torrents[0], 'details')
+  expect(onPick).toHaveBeenCalledWith(torrents[1])
 })
 
 it('does not start a transfer when the row is clicked', async () => {
@@ -76,7 +67,9 @@ it('shows an empty state', async () => {
 it('marks a torrent that is already in the library', async () => {
   const items: Torrent[] = [{ ...torrents[0], delivered: true, library: { have: 1, total: 1 } }]
   render(<Torrents api={fakeApi(items)} onPick={vi.fn()} />)
+  // the badge says it once; the line under the name does not repeat it
   expect(await screen.findByText('in Plex')).toBeInTheDocument()
+  expect(screen.getByText('file')).toBeInTheDocument()
   expect(screen.getByRole('button', { name: 'Send again: Some Movie' })).toBeInTheDocument()
 })
 

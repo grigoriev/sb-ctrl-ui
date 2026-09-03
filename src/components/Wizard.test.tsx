@@ -87,14 +87,11 @@ it('lets a second match be chosen when TMDb finds more than one', async () => {
   expect(api.createJob).toHaveBeenCalledWith('H1', 'other', 'Some Toon', 'skip')
 })
 
-it('opens on the description and sends only when asked', async () => {
+it('shows the description before anything is sent', async () => {
   const api = fakeApi([one])
-  render(<Wizard api={api} torrent={torrent} intent="details" onClose={vi.fn()} />)
+  render(<Wizard api={api} torrent={torrent} onClose={vi.fn()} />)
   expect(await screen.findByText('a film')).toBeInTheDocument()
-  expect(screen.queryByRole('button', { name: 'Start transfer' })).toBeNull()
-  await userEvent.click(screen.getByRole('button', { name: 'Send to Plex' }))
-  await userEvent.click(screen.getByRole('button', { name: 'Start transfer' }))
-  expect(api.createJob).toHaveBeenCalled()
+  expect(api.createJob).not.toHaveBeenCalled()
 })
 
 it('cannot be started twice', async () => {

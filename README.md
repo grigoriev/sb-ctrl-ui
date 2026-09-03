@@ -16,12 +16,12 @@ container environment, never from the code or the browser.
 
 ## Views
 
-- **Torrents** — completed torrents, filterable. Each row says what Plex
-  already holds of it and carries two buttons: **Details** reads the TMDb
-  description, **Send to Plex** opens the same dialog ready to send. The
-  dialog names the destination and warns when something is there already;
-  nothing leaves until **Start transfer**. A running transfer shows its
-  percent, rate and ETA in the row, refreshed from the job list.
+- **Torrents** — completed torrents, filterable, across the full width so a
+  release name fits on one line. A badge says what Plex already holds of it,
+  and one button opens the dialog: the TMDb description, the destination the
+  transfer lands in, and a warning when something is there already. Nothing
+  leaves until **Start transfer**. A running transfer shows its percent, rate
+  and ETA in the row, refreshed from the job list.
 - **Jobs** — transfer jobs with state / progress / ETA; retry a failed one.
 - **Sign in** — shown when the API reports `login_required`. The session lives in
   an HttpOnly cookie the server sets, so the browser stores no credentials.
