@@ -90,9 +90,6 @@ export interface SearchResult {
 
 export type Collision = 'skip' | 'overwrite'
 
-/** Why the title dialog was opened: to read about the title, or to send it. */
-export type Intent = 'details' | 'send'
-
 /** The preview of a transfer: where it lands, and whether that is taken. */
 export interface PlanResult {
   dest_path: string

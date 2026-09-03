@@ -1,15 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import {
-  Api,
-  humanSize,
-  inFlight,
-  libraryLabel,
-  progressLabel,
-  withJobs,
-  type Intent,
-  type Job,
-  type Torrent,
-} from '../api'
+import { Api, humanSize, inFlight, libraryLabel, progressLabel, withJobs, type Job, type Torrent } from '../api'
 import { Ring } from './Ring'
 
 /** How often the job list is asked what the running transfers are doing. */
@@ -20,10 +10,13 @@ function isRunning(t: Torrent): boolean {
   return Boolean(t.job && inFlight(t.job.state))
 }
 
-/** The line under the name: what is happening now, or what the row offers. */
+/** The line under the name: what is happening now, or what this release is.
+ *
+ * What the library holds is on the badge, so it is not repeated here.
+ */
 function metaLine(t: Torrent): string {
   if (t.job && isRunning(t)) return progressLabel(t.job)
-  return [t.is_multi ? 'folder' : 'file', libraryLabel(t)].filter(Boolean).join(' · ')
+  return t.is_multi ? 'folder' : 'file'
 }
 
 function startLabel(t: Torrent): string {
@@ -31,10 +24,7 @@ function startLabel(t: Torrent): string {
   return t.delivered ? 'Send again' : 'Send to Plex'
 }
 
-export function Torrents({
-  api,
-  onPick,
-}: Readonly<{ api: Api; onPick: (t: Torrent, intent: Intent) => void }>) {
+export function Torrents({ api, onPick }: Readonly<{ api: Api; onPick: (t: Torrent) => void }>) {
   const [items, setItems] = useState<Torrent[] | null>(null)
   const [jobs, setJobs] = useState<Job[]>([])
   const [error, setError] = useState('')
@@ -103,8 +93,9 @@ export function Torrents({
               key={t.hash}
               className="list-group-item d-flex justify-content-between align-items-center gap-2 gap-sm-3"
             >
-              {/* Release names are long and unbroken; let them wrap anywhere. */}
-              <span className="text-start text-break">
+              {/* A release name is long and unbroken. It takes the width the
+                  row has left and only wraps when even that is not enough. */}
+              <span className="text-start text-break flex-grow-1" style={{ minWidth: 0 }}>
                 <span className="fw-semibold">{t.name}</span>
                 <br />
                 <small className="text-body-secondary">{metaLine(t)}</small>
@@ -115,18 +106,10 @@ export function Torrents({
                 <span className="badge text-bg-secondary rounded-pill d-none d-sm-inline">{humanSize(t.size)}</span>
                 <button
                   type="button"
-                  className="btn btn-sm btn-outline-secondary"
-                  aria-label={`Details of ${t.name}`}
-                  onClick={() => onPick(t, 'details')}
-                >
-                  Details
-                </button>
-                <button
-                  type="button"
                   className={t.delivered ? 'btn btn-sm btn-outline-primary' : 'btn btn-sm btn-primary'}
                   aria-label={`${startLabel(t)}: ${t.name}`}
                   disabled={isRunning(t)}
-                  onClick={() => onPick(t, 'send')}
+                  onClick={() => onPick(t)}
                 >
                   {startLabel(t)}
                 </button>
