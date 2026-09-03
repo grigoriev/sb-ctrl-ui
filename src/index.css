@@ -1,7 +1,10 @@
 /* Bootstrap carries the look. Only page-level layout lives here. */
 
+/* Release names run to 60 characters and more. The page gives them the room
+   to stay on one line, and stops short of the full width of a wide screen so
+   the text still reads as a column. */
 .app {
-  max-width: 860px;
+  max-width: 1600px;
 }
 
 /* The wizard is a plain <dialog> styled with Bootstrap modal classes, so it
