@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import {
   Api,
   candidateName,
@@ -16,9 +16,14 @@ const KIND_LABEL: Record<string, string> = {
   series: 'Series',
   cartoon_series: 'Cartoon series',
 }
+const KINDS = Object.keys(KIND_LABEL)
+/** Where a release TMDb knows nothing about would go. */
+const FALLBACK_KIND = 'movie'
+/** How long a typed name is left alone before the destination is previewed. */
+const PLAN_DELAY = 400
 
 /** The poster and the text of one TMDb match. */
-function Details({ candidate }: Readonly<{ candidate: Candidate }>) {
+function Match({ candidate }: Readonly<{ candidate: Candidate }>) {
   return (
     <>
       {/* align-items-start keeps the 2:3 poster from stretching to the row height. */}
@@ -42,10 +47,13 @@ function Details({ candidate }: Readonly<{ candidate: Candidate }>) {
 }
 
 /** Where this lands, and what it does to whatever is there already. */
-function Destination({ plan, candidate }: Readonly<{ plan: PlanResult; candidate: Candidate }>) {
-  const merges = mergesIntoDestination(candidate.kind)
+function Destination({ plan, kind }: Readonly<{ plan: PlanResult; kind: string }>) {
   let note = ''
-  if (plan.collision) note = merges ? 'The show is already there; the pack adds to it.' : 'This replaces what is there.'
+  if (plan.collision) {
+    note = mergesIntoDestination(kind)
+      ? 'The show is already there; the pack adds to it.'
+      : 'This replaces what is there.'
+  }
   return (
     <div className="mt-3 small text-body-secondary">
       <div className="text-break">
@@ -58,12 +66,12 @@ function Destination({ plan, candidate }: Readonly<{ plan: PlanResult; candidate
 
 /** Shown when the destination is taken, so nothing is replaced unasked. */
 function Occupied({
-  candidate,
+  kind,
   dest,
   onConfirm,
   onBack,
-}: Readonly<{ candidate: Candidate; dest: string; onConfirm: () => void; onBack: () => void }>) {
-  const merges = mergesIntoDestination(candidate.kind)
+}: Readonly<{ kind: string; dest: string; onConfirm: () => void; onBack: () => void }>) {
+  const merges = mergesIntoDestination(kind)
   return (
     <div>
       <div className="alert alert-warning" role="alert">
@@ -90,13 +98,25 @@ function Occupied({
 }
 
 export function Wizard({ api, torrent, onClose }: Readonly<{ api: Api; torrent: Torrent; onClose: () => void }>) {
+  const [query, setQuery] = useState(torrent.name)
   const [candidates, setCandidates] = useState<Candidate[] | null>(null)
+  const [chosen, setChosen] = useState<Candidate | null>(null)
+  const [name, setName] = useState('')
+  const [kind, setKind] = useState(FALLBACK_KIND)
+  const [plan, setPlan] = useState<PlanResult | null>(null)
   const [error, setError] = useState('')
   const [started, setStarted] = useState('')
-  const [chosen, setChosen] = useState<Candidate | null>(null)
-  const [plan, setPlan] = useState<PlanResult | null>(null)
-  const [occupied, setOccupied] = useState<{ candidate: Candidate; dest: string } | null>(null)
+  const [occupied, setOccupied] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  // an answer that arrives after the dialog is gone has nothing to update
+  const alive = useRef(true)
+
+  useEffect(
+    () => () => {
+      alive.current = false
+    },
+    [],
+  )
 
   useEffect(() => {
     // <dialog open> is not modal, so the browser does not handle Escape for us.
@@ -105,47 +125,62 @@ export function Wizard({ api, torrent, onClose }: Readonly<{ api: Api; torrent: 
     return () => document.removeEventListener('keydown', onKey)
   }, [onClose])
 
-  useEffect(() => {
-    let active = true
-    api.search(torrent.name).then(
-      (r) => {
-        if (!active) return
-        setCandidates(r.candidates)
-        // TMDb answers its best match first, and a release usually has only
-        // that one, so nothing has to be picked before starting.
-        setChosen(r.candidates[0] ?? null)
-      },
-      (e: Error) => active && setError(e.message),
-    )
-    return () => {
-      active = false
-    }
-  }, [api, torrent])
+  /** Take a match: it fills in the name and the library, both still editable. */
+  function take(candidate: Candidate) {
+    setChosen(candidate)
+    setName(candidateName(candidate))
+    setKind(candidate.kind)
+  }
+
+  const search = useCallback(
+    (text: string) => {
+      setCandidates(null)
+      api.search(text).then(
+        (r) => {
+          if (!alive.current) return
+          setCandidates(r.candidates)
+          // TMDb answers its best match first, and a release usually has only
+          // that one, so nothing has to be picked before starting.
+          const first = r.candidates[0]
+          if (first) take(first)
+          else setName(text)
+        },
+        (e: Error) => alive.current && setError(e.message),
+      )
+    },
+    [api],
+  )
 
   useEffect(() => {
-    if (!chosen) return undefined
-    let active = true
-    // The plan is a preview with no side effects: it says where this lands
-    // and whether something is there, before anything is started.
-    api.plan(torrent.hash, chosen.kind, candidateName(chosen)).then(
-      (p) => active && setPlan(p),
-      () => active && setPlan(null),
-    )
-    return () => {
-      active = false
-    }
-  }, [api, torrent, chosen])
+    search(torrent.name)
+  }, [search, torrent])
 
-  async function start(c: Candidate, collision: Collision = 'skip') {
+  useEffect(() => {
+    if (!name) {
+      setPlan(null)
+      return undefined
+    }
+    // The preview follows the name, though not on every keystroke. A plan has
+    // no side effects: it only says where this would land.
+    const id = setTimeout(() => {
+      api.plan(torrent.hash, kind, name).then(
+        (p) => alive.current && setPlan(p),
+        () => alive.current && setPlan(null),
+      )
+    }, PLAN_DELAY)
+    return () => clearTimeout(id)
+  }, [api, torrent, name, kind])
+
+  async function start(collision: Collision = 'skip') {
     setBusy(true)
     try {
-      const result = await api.createJob(torrent.hash, c.kind, candidateName(c), collision)
+      const result = await api.createJob(torrent.hash, kind, name, collision)
       if (result.skipped) {
-        setOccupied({ candidate: c, dest: result.dest_path ?? '' })
+        setOccupied(result.dest_path ?? '')
         return
       }
       setOccupied(null)
-      setStarted(candidateName(c))
+      setStarted(name)
     } catch (e) {
       setError((e as Error).message)
     } finally {
@@ -153,32 +188,22 @@ export function Wizard({ api, torrent, onClose }: Readonly<{ api: Api; torrent: 
     }
   }
 
-  let body: ReactNode
-  if (started) {
-    body = <output className="alert alert-success d-block">Transfer started: {started}</output>
-  } else if (occupied) {
-    body = (
-      <Occupied
-        {...occupied}
-        onConfirm={() => start(occupied.candidate, 'overwrite')}
-        onBack={() => setOccupied(null)}
-      />
-    )
-  } else if (!candidates) {
-    body = <p className="text-body-secondary">Searching TMDb…</p>
+  let matches: ReactNode
+  if (!candidates) {
+    matches = <p className="text-body-secondary">Searching TMDb…</p>
   } else if (candidates.length === 0) {
-    body = <p className="text-body-secondary">No TMDb matches</p>
+    matches = <p className="text-body-secondary">No TMDb matches. Search again, or send it under the name below.</p>
   } else if (candidates.length === 1) {
     // One match is the normal case, and then there is nothing to choose.
-    body = (
+    matches = (
       <div className="card">
         <div className="card-body d-flex align-items-start gap-3 text-break">
-          <Details candidate={candidates[0]} />
+          <Match candidate={candidates[0]} />
         </div>
       </div>
     )
   } else {
-    body = (
+    matches = (
       <fieldset>
         <legend className="fs-6 text-body-secondary">TMDb found more than one match</legend>
         <div className="list-group">
@@ -189,13 +214,67 @@ export function Wizard({ api, torrent, onClose }: Readonly<{ api: Api; torrent: 
                 type="radio"
                 name="candidate"
                 checked={chosen?.tmdb_id === c.tmdb_id}
-                onChange={() => setChosen(c)}
+                onChange={() => take(c)}
               />
-              <Details candidate={c} />
+              <Match candidate={c} />
             </label>
           ))}
         </div>
       </fieldset>
+    )
+  }
+
+  let body: ReactNode
+  if (started) {
+    body = <output className="alert alert-success d-block">Transfer started: {started}</output>
+  } else if (occupied !== null) {
+    body = <Occupied kind={kind} dest={occupied} onConfirm={() => start('overwrite')} onBack={() => setOccupied(null)} />
+  } else {
+    body = (
+      <>
+        {/* A release name is written for a tracker, not for a search, so the
+            query TMDb is asked can be rewritten. */}
+        <form
+          className="input-group mb-3"
+          onSubmit={(e) => {
+            e.preventDefault()
+            search(query)
+          }}
+        >
+          <input
+            className="form-control"
+            aria-label="Search TMDb for"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          <button type="submit" className="btn btn-outline-secondary">
+            Search
+          </button>
+        </form>
+        {matches}
+        {/* TMDb only proposes. The delivery uses what stands here. */}
+        <div className="row g-2 mt-1">
+          <div className="col-12 col-sm-8">
+            <label className="form-label small mb-1" htmlFor="dest-name">
+              Name in the library
+            </label>
+            <input id="dest-name" className="form-control" value={name} onChange={(e) => setName(e.target.value)} />
+          </div>
+          <div className="col-12 col-sm-4">
+            <label className="form-label small mb-1" htmlFor="dest-kind">
+              Library
+            </label>
+            <select id="dest-kind" className="form-select" value={kind} onChange={(e) => setKind(e.target.value)}>
+              {KINDS.map((k) => (
+                <option key={k} value={k}>
+                  {KIND_LABEL[k]}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        {plan && <Destination plan={plan} kind={kind} />}
+      </>
     )
   }
 
@@ -220,22 +299,16 @@ export function Wizard({ api, torrent, onClose }: Readonly<{ api: Api; torrent: 
               </div>
             )}
             {body}
-            {!started && !occupied && plan && chosen && <Destination plan={plan} candidate={chosen} />}
           </div>
           {/* The transfer starts from this footer and nowhere else, so reading
               about a title never sends 20 GB across the network. */}
-          {!occupied && (
+          {occupied === null && (
             <div className="modal-footer">
               <button type="button" className="btn btn-outline-secondary" onClick={onClose}>
                 {started ? 'Close' : 'Cancel'}
               </button>
               {!started && (
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  disabled={!chosen || busy}
-                  onClick={() => chosen && start(chosen)}
-                >
+                <button type="button" className="btn btn-primary" disabled={!name || busy} onClick={() => start()}>
                   {busy ? 'Starting…' : 'Start transfer'}
                 </button>
               )}
