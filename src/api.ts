@@ -81,6 +81,12 @@ export interface Candidate {
   kind: string
   /** Optional: an API older than 0.2.0 does not send it. */
   poster?: string
+  /**
+   * What the library should call it. The original title, unless that is
+   * written in a script the library is not, and then the English one.
+   * Absent before sb-ctrl 0.5.0.
+   */
+  name?: string
 }
 
 export interface SearchResult {
@@ -157,7 +163,8 @@ export function runtimeConfig(w: Window = window): Settings {
 }
 
 export function candidateName(c: Candidate): string {
-  return c.year ? `${c.original_title} (${c.year})` : c.original_title
+  const title = c.name || c.original_title
+  return c.year ? `${title} (${c.year})` : title
 }
 
 /** "Season 1: 8 episodes", or "Seasons 1 (8), 2 (10)" for a multi season pack. */
