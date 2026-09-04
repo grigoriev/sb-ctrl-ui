@@ -47,6 +47,11 @@ describe('helpers', () => {
     expect(candidateName({ original_title: 'Film', year: '' } as never)).toBe('Film')
   })
 
+  it('candidateName prefers the name the library can read', () => {
+    const parasite = { original_title: '기생충', name: 'Parasite', year: '2019' } as never
+    expect(candidateName(parasite)).toBe('Parasite (2019)')
+  })
+
   it('runtimeConfig falls back to the same origin and no token', () => {
     expect(runtimeConfig({} as Window)).toEqual({ baseUrl: '/api', token: '' })
   })
