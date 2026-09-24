@@ -3,6 +3,7 @@
 [![CI](https://github.com/grigoriev/sb-ctrl-ui/actions/workflows/ci.yml/badge.svg)](https://github.com/grigoriev/sb-ctrl-ui/actions/workflows/ci.yml)
 [![Publish image](https://github.com/grigoriev/sb-ctrl-ui/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/grigoriev/sb-ctrl-ui/actions/workflows/docker-publish.yml)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/grigoriev/sb-ctrl-ui/badge)](https://scorecard.dev/viewer/?uri=github.com/grigoriev/sb-ctrl-ui)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/14806/badge)](https://www.bestpractices.dev/projects/14806)
 [![Release](https://img.shields.io/github/v/release/grigoriev/sb-ctrl-ui)](https://github.com/grigoriev/sb-ctrl-ui/releases)
 [![TypeScript](https://img.shields.io/badge/language-TypeScript-blue.svg)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
