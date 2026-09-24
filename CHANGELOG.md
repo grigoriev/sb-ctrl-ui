@@ -32,6 +32,13 @@ Releases before 0.6.1 are listed on the
   so a custom `SB_API_BASE` without a token was ignored. Values are now JSON string
   literals, with quotes, backslashes, control characters and `<` escaped.
 
+### Security
+
+- Rebuild Caddy v2.11.4 in the image with Go 1.26.8 and newer `golang.org/x/crypto`,
+  `x/net`, `x/text` and `google.golang.org/grpc`. This fixes 17 HIGH findings in the
+  Caddy binary, for which no Caddy release has a fix yet. The modules and the served
+  configuration stay the same.
+
 ## [0.6.1] - 2026-09-24
 
 ### Security
