@@ -24,6 +24,42 @@ dialog.modal::backdrop {
   background: rgba(0, 0, 0, 0.5);
 }
 
+/* A native <progress> drawn like Bootstrap's progress bar. The .progress
+   wrapper gives the track, the height and the colors; the label sits on the
+   filled part, as the text of a .progress-bar does. */
+.progress > progress {
+  appearance: none;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: transparent;
+}
+
+.progress > progress::-webkit-progress-bar {
+  background: transparent;
+}
+
+.progress > progress::-webkit-progress-value {
+  background-color: var(--bs-progress-bar-bg);
+  transition: var(--bs-progress-bar-transition);
+}
+
+.progress > progress::-moz-progress-bar {
+  background-color: var(--bs-progress-bar-bg);
+}
+
+.progress-label {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  white-space: nowrap;
+  color: var(--bs-progress-bar-color);
+}
+
 /* Comfortable touch targets on a phone; the desktop keeps Bootstrap's own. */
 @media (max-width: 575.98px) {
   .list-group-item {

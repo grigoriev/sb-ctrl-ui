@@ -26,10 +26,16 @@ export interface Torrent {
   library?: LibraryMatch
 }
 
-/** The release a remote path names: its last component. */
+/**
+ * The release a remote path names: its last component, trailing slashes aside.
+ *
+ * A loop, not a regex: a trailing-slash regex backtracks on long slash runs.
+ */
 export function releaseName(baseRel: string): string {
-  const parts = baseRel.replace(/\/+$/, '').split('/')
-  return parts[parts.length - 1]
+  let end = baseRel.length
+  while (end > 0 && baseRel[end - 1] === '/') end--
+  const trimmed = baseRel.slice(0, end)
+  return trimmed.slice(trimmed.lastIndexOf('/') + 1)
 }
 
 /**
@@ -174,7 +180,8 @@ export function seasonsLabel(seasons: Season[]): string {
     const only = seasons[0]
     return `Season ${only.season}: ${only.episodes} ${only.episodes === 1 ? 'episode' : 'episodes'}`
   }
-  return `Seasons ${seasons.map((s) => `${s.season} (${s.episodes})`).join(', ')}`
+  const list = seasons.map((s) => `${s.season} (${s.episodes})`).join(', ')
+  return `Seasons ${list}`
 }
 
 /** A job timestamp in the reader's own locale; epoch seconds, not milliseconds. */

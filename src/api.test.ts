@@ -5,6 +5,7 @@ import {
   humanSize,
   jobTime,
   mergesIntoDestination,
+  releaseName,
   runtimeConfig,
   seasonsLabel,
   type Settings,
@@ -166,6 +167,27 @@ describe('Api', () => {
     const { api, fetchMock } = apiWith({ body: { job_id: 'J1' } })
     await api.retry('J1')
     expect(fetchMock.mock.calls[0][0]).toBe('http://host/jobs/J1/retry')
+  })
+})
+
+describe('releaseName', () => {
+  it.each([
+    ['files/Movies/Some.Release', 'Some.Release'],
+    ['files/Movies/Some.Release/', 'Some.Release'],
+    ['files/Movies/Some.Release///', 'Some.Release'],
+    ['Some.Release', 'Some.Release'],
+    ['/Some.Release', 'Some.Release'],
+    ['a//b', 'b'],
+    ['', ''],
+    ['/', ''],
+    ['///', ''],
+  ])('names %j as %j', (input, expected) => {
+    expect(releaseName(input)).toBe(expected)
+  })
+
+  it('stays linear on a long run of slashes', () => {
+    const input = `${'/'.repeat(100_000)}x${'/'.repeat(100_000)}`
+    expect(releaseName(input)).toBe('x')
   })
 })
 
