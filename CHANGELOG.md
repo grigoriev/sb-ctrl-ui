@@ -6,6 +6,8 @@ The project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-09-24
+
 ### Security
 
 - Audit the workflows with actionlint and zizmor in a new `lint` job.
