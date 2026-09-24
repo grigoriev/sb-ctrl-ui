@@ -9,10 +9,31 @@ set -eu
 
 : "${SB_API_BASE:=/api}"
 : "${SB_API_TOKEN:=}"
+export SB_API_BASE SB_API_TOKEN
+
+# Prints the environment variable named $1 as a JSON string literal, which is
+# also a JavaScript string. An empty value gives "". Escapes the backslash, the
+# double quote, control characters and "<", so no value can end the string or
+# a surrounding script element. awk reads the value from ENVIRON, since -v
+# would interpret backslashes.
+js_string() {
+  awk -v name="$1" 'BEGIN {
+    for (i = 1; i < 32; i++) esc[sprintf("%c", i)] = sprintf("\\u%04x", i)
+    esc["\n"] = "\\n"; esc["\r"] = "\\r"; esc["\t"] = "\\t"
+    esc["\\"] = "\\\\"; esc["\""] = "\\\""; esc["<"] = "\\u003c"
+    s = ENVIRON[name]
+    out = ""
+    for (i = 1; i <= length(s); i++) {
+      c = substr(s, i, 1)
+      out = out ((c in esc) ? esc[c] : c)
+    }
+    printf "\"%s\"", out
+  }'
+}
 
 {
-  printf 'window.SB_API_BASE=%s;\n' "$(printf '%s' "$SB_API_BASE" | sed 's/\\/\\\\/g; s/"/\\"/g; s/.*/"&"/')"
-  printf 'window.SB_API_TOKEN=%s;\n' "$(printf '%s' "$SB_API_TOKEN" | sed 's/\\/\\\\/g; s/"/\\"/g; s/.*/"&"/')"
+  printf 'window.SB_API_BASE=%s;\n' "$(js_string SB_API_BASE)"
+  printf 'window.SB_API_TOKEN=%s;\n' "$(js_string SB_API_TOKEN)"
 } > /srv/config.js
 
 exec "$@"

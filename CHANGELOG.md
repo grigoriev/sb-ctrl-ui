@@ -25,6 +25,13 @@ Releases before 0.6.1 are listed on the
   bump pushes without stored credentials, and a release run fails when the release
   exists already.
 
+### Fixed
+
+- The entrypoint writes a valid `config.js` in every case. An empty `SB_API_TOKEN`
+  gave `window.SB_API_TOKEN=;`, a syntax error: the browser dropped the whole file,
+  so a custom `SB_API_BASE` without a token was ignored. Values are now JSON string
+  literals, with quotes, backslashes, control characters and `<` escaped.
+
 ## [0.6.1] - 2026-09-24
 
 ### Security
