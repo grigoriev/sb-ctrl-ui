@@ -5,5 +5,13 @@
   ],
   "lockFileMaintenance": {
     "enabled": true
-  }
+  },
+  "packageRules": [
+    {
+      "description": "The builder and the final stage of the Dockerfile name the same Caddy release, so they move in one pull request.",
+      "matchDatasources": ["docker"],
+      "matchDepNames": ["caddy"],
+      "groupName": "caddy"
+    }
+  ]
 }
