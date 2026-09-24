@@ -23,6 +23,11 @@ The project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - CHANGELOG.md, and Verify, Contributing and Disclaimer sections in the README.
 
+### Changed
+
+- Draw the job progress with a native `<progress>` element, styled like before.
+- Trim trailing slashes of a release path without a backtracking regex.
+
 ### Fixed
 
 - Run CI once per commit on a Renovate branch: drop `renovate/**` from the push trigger.

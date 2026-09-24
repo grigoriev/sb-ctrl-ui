@@ -18,6 +18,7 @@ it('mirrors a dark preference onto the attribute', () => {
   const { media } = fakeMedia(true)
   followColorScheme(media, root)
   expect(root.getAttribute('data-bs-theme')).toBe('dark')
+  expect(root.dataset.bsTheme).toBe('dark')
 })
 
 it('follows a switch to light mid-session', () => {

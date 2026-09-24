@@ -7,7 +7,7 @@ export function Login({ api, onDone }: Readonly<{ api: Api; onDone: () => void }
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
 
-  async function submit(e: React.FormEvent) {
+  async function submit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault()
     setBusy(true)
     setError('')

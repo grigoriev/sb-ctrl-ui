@@ -69,10 +69,11 @@ export function Jobs({ api }: Readonly<{ api: Api }>) {
             {/* The release name is what tells two transfers of one show apart. */}
             {j.release && <small className="text-body-secondary d-block text-break">{j.release}</small>}
             {j.pct != null && (
-              <div className="progress mt-2" role="progressbar" aria-label="progress" aria-valuenow={j.pct}>
-                <div className="progress-bar" style={{ width: `${j.pct}%` }}>
+              <div className="progress mt-2 position-relative">
+                <progress value={j.pct} max={100} aria-label="progress" />
+                <span className="progress-label" style={{ width: `${j.pct}%` }} aria-hidden="true">
                   {j.pct}%
-                </div>
+                </span>
               </div>
             )}
             <small className="text-body-secondary d-block mt-2">
