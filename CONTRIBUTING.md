@@ -4,12 +4,14 @@ Thanks for your interest in improving this project.
 
 ## Development
 
-This project uses [uv](https://docs.astral.sh/uv/). Run the checks with:
+This project uses npm. Run the checks with:
 
 ```sh
-uv run ruff check .
-uv run mypy .
-uv run pytest
+npm ci
+npm run lint       # oxlint
+npm run typecheck  # tsc -b
+npm test           # vitest + coverage
+npm run build      # production build to dist/
 ```
 
 ## Commit messages
@@ -29,3 +31,5 @@ subject under 50 characters. Types: `feat`, `fix`, `docs`, `style`, `refactor`,
 ## Before opening a pull request
 
 - Run the checks above and make sure CI is green.
+- Sign your commits. The `main` branch accepts verified signatures only.
+- Pull requests are merged with squash merge.

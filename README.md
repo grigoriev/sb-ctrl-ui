@@ -1,8 +1,13 @@
 # sb-ctrl-ui
 
-![CI](https://github.com/grigoriev/sb-ctrl-ui/actions/workflows/ci.yml/badge.svg)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=grigoriev_sb-ctrl-ui&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=grigoriev_sb-ctrl-ui)
+[![CI](https://github.com/grigoriev/sb-ctrl-ui/actions/workflows/ci.yml/badge.svg)](https://github.com/grigoriev/sb-ctrl-ui/actions/workflows/ci.yml)
+[![Publish image](https://github.com/grigoriev/sb-ctrl-ui/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/grigoriev/sb-ctrl-ui/actions/workflows/docker-publish.yml)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/grigoriev/sb-ctrl-ui/badge)](https://scorecard.dev/viewer/?uri=github.com/grigoriev/sb-ctrl-ui)
+[![Release](https://img.shields.io/github/v/release/grigoriev/sb-ctrl-ui)](https://github.com/grigoriev/sb-ctrl-ui/releases)
+[![TypeScript](https://img.shields.io/badge/language-TypeScript-blue.svg)](https://www.typescriptlang.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=grigoriev_sb-ctrl-ui&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=grigoriev_sb-ctrl-ui)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=grigoriev_sb-ctrl-ui&metric=coverage)](https://sonarcloud.io/summary/new_code?id=grigoriev_sb-ctrl-ui)
 
 React web UI for the [sb-ctrl](https://github.com/grigoriev/sb-ctrl) seedbox to
@@ -58,3 +63,34 @@ to that proxy: it adds the bearer token, so no browser has to hold one.
 
 Beta. The torrent list, wizard, jobs view, and settings are implemented against
 the sb-ctrl REST API; ~94% test coverage.
+
+## Container image
+
+Each GitHub release publishes `ghcr.io/grigoriev/sb-ctrl-ui:<version>`.
+[sb-stack](https://github.com/grigoriev/sb-stack) runs it.
+
+### Verify
+
+Images published after 0.6.0 carry a signed build provenance and an SPDX SBOM
+attestation. Check that this repository's workflow built an image:
+
+```sh
+gh attestation verify oci://ghcr.io/grigoriev/sb-ctrl-ui:<tag> --owner grigoriev
+```
+
+Add `--predicate-type https://spdx.dev/Document/v2.3` to check the SBOM.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Disclaimer
+
+This software is provided "as is", without warranty of any kind, as the LICENSE states. Use
+it at your own risk. Sergey Grigoriev is not liable for damage from its use, as far as the law
+allows. It is published free of charge, outside of any commercial offering, with no
+obligation to support it. Security reports are welcome, see [SECURITY.md](SECURITY.md).
+
+## License
+
+MIT License - see [LICENSE](LICENSE) for details.
