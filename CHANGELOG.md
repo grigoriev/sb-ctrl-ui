@@ -17,6 +17,7 @@ The project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Let Renovate refresh `package-lock.json` and raise OSV vulnerability alerts.
 - Attest the published image: signed build provenance and an SPDX SBOM.
 - Attach the provenance bundle and the SBOM to the GitHub release as assets.
+- Renovate takes its common rules from the shared preset `github>grigoriev/renovate-config`.
 
 ### Added
 
