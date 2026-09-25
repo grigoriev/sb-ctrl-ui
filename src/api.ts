@@ -242,7 +242,7 @@ export class Api {
         body: body === undefined ? undefined : JSON.stringify(body),
       })
     } catch {
-      throw new Error('server unreachable — connect to VPN or LAN')
+      throw new Error('server unreachable: connect to VPN or LAN')
     }
     if (!res.ok) {
       const data = await res.json().catch(() => ({}))

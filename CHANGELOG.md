@@ -9,6 +9,11 @@ Releases before 0.6.1 are listed on the
 
 ## [Unreleased]
 
+### Changed
+
+- The message for an unreachable server now reads "server unreachable: connect to VPN
+  or LAN", without an em-dash.
+
 ## [0.6.2] - 2026-09-25
 
 ### Changed
