@@ -142,7 +142,7 @@ describe('Api', () => {
 
   it('reports an unreachable server', async () => {
     const { api } = apiWith({ reject: true })
-    await expect(api.torrents()).rejects.toThrow('unreachable')
+    await expect(api.torrents()).rejects.toThrow('server unreachable: connect to VPN or LAN')
   })
 
   it('calls fetch on the global object', async () => {
