@@ -11,7 +11,7 @@ RUN npm run build
 # the same standard modules, a current Go and newer modules. go get only
 # raises versions, so a later Caddy keeps its own newer ones. Drop this stage
 # once a Caddy release carries the fixes.
-FROM caddy:2-builder-alpine@sha256:2b9f32cbba6045e79212bb253f595588d20be8f7d1edf61582c519e124e0d2d8 AS caddy
+FROM caddy:2-builder-alpine@sha256:0aa610043dab5da82ad0a0268e46bb852785e6f5160f12f1c6fe3f42903d7e1b AS caddy
 WORKDIR /src
 RUN printf '%s\n' 'package main' \
       'import (' \
