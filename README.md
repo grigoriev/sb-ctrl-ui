@@ -62,8 +62,8 @@ to that proxy: it adds the bearer token, so no browser has to hold one.
 
 ## Status
 
-Beta. The torrent list, wizard, jobs view, and settings are implemented against
-the sb-ctrl REST API; ~94% test coverage.
+Beta. The torrent list, wizard, jobs view, and sign in are implemented against
+the sb-ctrl REST API. Tests cover 100% of the code, and CI enforces it.
 
 ## Container image
 

@@ -40,8 +40,8 @@ tests/smoke-image.sh sb-ctrl-ui:test    # start the image and check what Caddy s
 - `Caddyfile`: plain HTTP on `:80`, gzip, single-page fallback to `index.html`
 - `index.html` loads `/config.js` before the bundle. `__UI_VERSION__` comes from `package.json`
 
-Vitest reads `vitest.config.ts`, which sets 100% coverage thresholds. `vite.config.ts` also holds
-a `test` block with lower thresholds. Keep the two in sync, or note which one applies.
+Vitest reads `vitest.config.ts`, which sets 100% coverage thresholds. `vite.config.ts` holds the
+build settings only. Do not add a `test` block there.
 
 ## Code Style
 

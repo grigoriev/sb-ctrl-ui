@@ -11,6 +11,8 @@ Releases before 0.6.1 are listed on the
 
 ### Changed
 
+- Vitest settings live in `vitest.config.ts` only. `vite.config.ts` held a second
+  `test` block with lower coverage thresholds that never applied.
 - The message for an unreachable server now reads "server unreachable: connect to VPN
   or LAN", without an em-dash.
 
