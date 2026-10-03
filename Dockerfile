@@ -11,7 +11,7 @@ RUN npm run build
 # the same standard modules, a current Go and newer modules. go get only
 # raises versions, so a later Caddy keeps its own newer ones. Drop this stage
 # once a Caddy release carries the fixes.
-FROM caddy:2-builder-alpine@sha256:0aa610043dab5da82ad0a0268e46bb852785e6f5160f12f1c6fe3f42903d7e1b AS caddy
+FROM caddy:2-builder-alpine@sha256:2c0aa71dd8120d80924896a65a1bbc08d2f5d0bcb896cc6310bbbedd53946009 AS caddy
 WORKDIR /src
 RUN printf '%s\n' 'package main' \
       'import (' \
@@ -28,7 +28,7 @@ RUN printf '%s\n' 'package main' \
     && go mod tidy \
     && CGO_ENABLED=0 go build -trimpath -ldflags '-w -s' -o /caddy .
 
-FROM caddy:2-alpine@sha256:6aeddd44c3078b0f9a35206472a11420648a79c184603ef95957d0a20044cb2b
+FROM caddy:2-alpine@sha256:881bbc60f9986d5ab8e7cfd6cf7e4ef3c9c0439fef2429d035d065577882f028
 COPY --from=caddy /caddy /usr/bin/caddy
 COPY --from=build /app/dist /srv
 COPY Caddyfile /etc/caddy/Caddyfile
