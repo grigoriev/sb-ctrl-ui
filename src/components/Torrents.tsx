@@ -56,7 +56,7 @@ export function Torrents({ api, onPick }: Readonly<{ api: Api; onPick: (t: Torre
         },
         () => undefined,
       )
-    poll()
+    void poll()
     const id = setInterval(poll, POLL_MS)
     return () => clearInterval(id)
   }, [api, load])
