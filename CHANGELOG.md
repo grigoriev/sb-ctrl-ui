@@ -9,6 +9,8 @@ Releases before 0.6.1 are listed on the
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-11-03
+
 ### Changed
 
 - **Breaking:** the image no longer runs Caddy or any web server. Run it once on a
