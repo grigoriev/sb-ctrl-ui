@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { expect, it, vi } from 'vitest'
 import { Jobs } from './Jobs'
@@ -83,6 +83,30 @@ it('reports a failed retry', async () => {
   await userEvent.click(await screen.findByRole('button', { name: 'Retry' }))
   expect(api.retry).toHaveBeenCalledWith('J6')
   expect(await screen.findByRole('alert')).toHaveTextContent('no such job')
+})
+
+it('keeps the error of an action through the next poll until closed', async () => {
+  vi.useFakeTimers({ shouldAdvanceTime: true })
+  try {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    const jobs: Job[] = [{ id: 'J7', name: 'Gone', state: 'failed', error: 'died' }]
+    const api = {
+      jobs: vi.fn().mockResolvedValue({ jobs }),
+      retry: vi.fn().mockRejectedValue(new Error('no such job')),
+    } as unknown as Api
+    render(<Jobs api={api} />)
+    await user.click(await screen.findByRole('button', { name: 'Retry' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('no such job')
+    const polls = vi.mocked(api.jobs).mock.calls.length
+    await act(() => vi.advanceTimersByTimeAsync(3500))
+    expect(vi.mocked(api.jobs).mock.calls.length).toBeGreaterThan(polls)
+    expect(screen.getByRole('alert')).toHaveTextContent('no such job')
+    expect(screen.getByText('Gone')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Close' }))
+    expect(screen.queryByRole('alert')).toBeNull()
+  } finally {
+    vi.useRealTimers()
+  }
 })
 
 it('shows what a finished job transferred', async () => {

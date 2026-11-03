@@ -28,6 +28,8 @@ function metaLine(j: Job): string {
 export function Jobs({ api }: Readonly<{ api: Api }>) {
   const [jobs, setJobs] = useState<Job[] | null>(null)
   const [error, setError] = useState('')
+  // The error of a button. The poll does not clear it, the next action or Close does.
+  const [actionError, setActionError] = useState('')
   const [log, setLog] = useState<{ id: string; text: string } | null>(null)
 
   const load = useCallback(() => {
@@ -55,8 +57,23 @@ export function Jobs({ api }: Readonly<{ api: Api }>) {
   if (!jobs) return <p className="text-body-secondary">Loading…</p>
   if (jobs.length === 0) return <p className="text-body-secondary">No transfers</p>
 
+  /** Runs a button's request, then `done`. Its error stays until the next action. */
+  const act = (request: Promise<unknown>, done?: () => void) => {
+    setActionError('')
+    request.then(
+      () => done?.(),
+      (e: Error) => setActionError(e.message),
+    )
+  }
+
   return (
     <div>
+      {actionError && (
+        <div className="alert alert-danger alert-dismissible" role="alert">
+          {actionError}
+          <button type="button" className="btn-close" aria-label="Close" onClick={() => setActionError('')} />
+        </div>
+      )}
       {jobs.map((j) => (
         <div className="card mb-2" key={j.id}>
           <div className="card-body">
@@ -93,7 +110,7 @@ export function Jobs({ api }: Readonly<{ api: Api }>) {
                 <button
                   type="button"
                   className="btn btn-sm btn-outline-secondary"
-                  onClick={() => api.retry(j.id).then(load, (e: Error) => setError(e.message))}
+                  onClick={() => act(api.retry(j.id), load)}
                 >
                   Retry
                 </button>
@@ -105,10 +122,7 @@ export function Jobs({ api }: Readonly<{ api: Api }>) {
                   onClick={() =>
                     log?.id === j.id
                       ? setLog(null)
-                      : api.jobLog(j.id).then(
-                          (r) => setLog({ id: j.id, text: r.log }),
-                          (e: Error) => setError(e.message),
-                        )
+                      : act(api.jobLog(j.id).then((r) => setLog({ id: j.id, text: r.log })))
                   }
                 >
                   {log?.id === j.id ? 'Hide log' : 'Log'}
@@ -120,7 +134,7 @@ export function Jobs({ api }: Readonly<{ api: Api }>) {
                   type="button"
                   className="btn btn-sm btn-outline-danger"
                   aria-label={`Delete ${j.name ?? j.id}`}
-                  onClick={() => api.deleteJob(j.id).then(load, (e: Error) => setError(e.message))}
+                  onClick={() => act(api.deleteJob(j.id), load)}
                 >
                   Delete
                 </button>
