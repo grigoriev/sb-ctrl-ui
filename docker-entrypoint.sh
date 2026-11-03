@@ -1,5 +1,6 @@
 #!/bin/sh
-# The built app is static, so it cannot read the environment. Write what it
+# Copies the built app from /srv to /out, the volume the proxy serves, then
+# exits. The app is static, so it cannot read the environment. Write what it
 # needs into a script the page loads before its bundle.
 #
 # SB_API_BASE  where the API lives, default /api (same origin as this page)
@@ -31,9 +32,15 @@ js_string() {
   }'
 }
 
+OUT=/out
+
+# Drop the files of the previous version, then copy this one.
+find "$OUT" -mindepth 1 -delete
+cp -R /srv/. "$OUT/"
+
 {
   printf 'window.SB_API_BASE=%s;\n' "$(js_string SB_API_BASE)"
   printf 'window.SB_API_TOKEN=%s;\n' "$(js_string SB_API_TOKEN)"
-} > /srv/config.js
+} > "$OUT/config.js"
 
-exec "$@"
+echo "sb-ctrl-ui: copied the app to $OUT"

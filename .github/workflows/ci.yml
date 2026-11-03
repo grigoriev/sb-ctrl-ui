@@ -48,7 +48,7 @@ jobs:
           version: 1.31.1
 
       # Misconfigurations in the Dockerfile, before any image is built.
-      # Accepted findings are in .trivyignore with the reason.
+      # An accepted finding goes to .trivyignore with the reason.
       - name: Trivy config scan
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:

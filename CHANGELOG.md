@@ -11,6 +11,12 @@ Releases before 0.6.1 are listed on the
 
 ### Changed
 
+- **Breaking:** the image no longer runs Caddy or any web server. Run it once on a
+  volume: it copies the app and `config.js` to `/out` and exits. The proxy serves the
+  volume, with a fallback to `index.html`. sb-stack needs a matching change.
+- The image is BusyBox with the built files and runs as UID 65534. Trivy finds no
+  vulnerabilities in it. This closes the HIGH findings of Caddy and its Go modules.
+
 - Vitest settings live in `vitest.config.ts` only. `vite.config.ts` held a second
   `test` block with lower coverage thresholds that never applied.
 - The message for an unreachable server now reads "server unreachable: connect to VPN
