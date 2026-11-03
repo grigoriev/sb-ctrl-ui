@@ -13,16 +13,19 @@ cd "$(dirname "$0")/.."
 IMAGE="${1:?usage: tests/smoke-image.sh <image>}"
 VOLUME="sb-ctrl-ui-smoke-$$"
 
+# cleanup: removes the test volume on exit.
 cleanup() {
   docker volume rm -f "$VOLUME" >/dev/null 2>&1 || true
 }
 trap cleanup EXIT
 
+# fail <message>: prints the failure and stops the test.
 fail() {
   echo "FAIL: $*" >&2
   exit 1
 }
 
+# pass <name>: prints a passed check.
 pass() {
   echo "ok: $*"
 }
