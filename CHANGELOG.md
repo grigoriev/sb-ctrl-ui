@@ -9,6 +9,13 @@ Releases before 0.6.1 are listed on the
 
 ## [Unreleased]
 
+### Added
+
+- The wizard tells the same release from another version when a file is in the
+  way. It compares the size the server reports with the size of the torrent, and
+  still offers Replace. It needs sb-ctrl with `existing_size`, and shows the
+  earlier warning without it.
+
 ### Fixed
 
 - A failed Retry in the jobs view shows the error, as Log and Delete do. It
