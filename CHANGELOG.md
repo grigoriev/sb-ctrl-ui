@@ -13,8 +13,9 @@ Releases before 0.6.1 are listed on the
 
 - A failed Retry in the jobs view shows the error, as Log and Delete do. It
   failed without a message before, for example for a job deleted elsewhere.
-- The error of Retry, Log or Delete stays above the job list until the next
-  action or Close. The poll every 3 s cleared it before, and it only flashed.
+- The error of Retry, Log or Delete stays above the job list until the next of
+  these requests or Close. The poll every 3 s cleared it before, and it only
+  flashed. It also stays when the poll empties the list or fails.
 
 ## [0.7.0] - 2026-11-03
 

@@ -28,9 +28,9 @@ function metaLine(j: Job): string {
 export function Jobs({ api }: Readonly<{ api: Api }>) {
   const [jobs, setJobs] = useState<Job[] | null>(null)
   const [error, setError] = useState('')
-  // The error of a button. The poll does not clear it, the next action or Close does.
+  // The error of Retry, Log or Delete. The poll does not clear it, the next of these or Close does.
   const [actionError, setActionError] = useState('')
-  // Counts the actions, so a late error of a replaced action does not show.
+  // Counts the requests, so a late error of a replaced request does not show.
   const lastAction = useRef(0)
   const [log, setLog] = useState<{ id: string; text: string } | null>(null)
 
@@ -50,7 +50,7 @@ export function Jobs({ api }: Readonly<{ api: Api }>) {
     return () => clearInterval(id)
   }, [load])
 
-  /** Runs a button's request, then `done`. Its error stays until the next action. */
+  /** Runs the request of Retry, Log or Delete, then `done`. Its error stays until the next one. */
   const act = (request: Promise<unknown>, done?: () => void) => {
     const action = ++lastAction.current
     setActionError('')
