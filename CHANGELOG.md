@@ -9,6 +9,8 @@ Releases before 0.6.1 are listed on the
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-11-03
+
 ### Added
 
 - The wizard tells the same release from another version when a file is in the
