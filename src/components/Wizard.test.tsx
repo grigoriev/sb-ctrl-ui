@@ -61,6 +61,62 @@ it('warns about a taken destination before anything is started', async () => {
   expect(await screen.findByText('This replaces what is there.')).toBeInTheDocument()
 })
 
+const BIG: Torrent = { ...torrent, size: 12287957607 }
+const OTHER = 'Plex holds another version, 4.9 GB. This release is 11.4 GB. Sending replaces it.'
+const SAME = 'Plex holds this file already, 11.4 GB. Sending again replaces it with the same file.'
+
+it('warns that the destination holds another version', async () => {
+  const api = fakeApi([one], {
+    plan: vi.fn().mockResolvedValue({ ...PLAN, collision: true, existing_size: 5296311059 }),
+  })
+  render(<Wizard api={api} torrent={BIG} onClose={vi.fn()} />)
+  expect(await screen.findByText(OTHER)).toBeInTheDocument()
+})
+
+it('says the destination holds the same file', async () => {
+  const api = fakeApi([one], {
+    plan: vi.fn().mockResolvedValue({ ...PLAN, collision: true, existing_size: 12287957607 }),
+  })
+  render(<Wizard api={api} torrent={BIG} onClose={vi.fn()} />)
+  expect(await screen.findByText(SAME)).toBeInTheDocument()
+})
+
+it.each([
+  [5296311059, OTHER],
+  [12287957607, SAME],
+])('asks before it replaces a file of %i bytes', async (existing, text) => {
+  const api = fakeApi([one], {
+    createJob: vi.fn().mockResolvedValue({ skipped: true, dest_path: PLAN.dest_path, existing_size: existing }),
+  })
+  render(<Wizard api={api} torrent={BIG} onClose={vi.fn()} />)
+  await screen.findByText('Some Movie (2024)')
+  await userEvent.click(screen.getByRole('button', { name: 'Start transfer' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent(text)
+  expect(screen.getByRole('button', { name: 'Replace' })).toBeInTheDocument()
+})
+
+it('shows the bytes when two versions round to the same size', async () => {
+  const api = fakeApi([one], {
+    plan: vi.fn().mockResolvedValue({ ...PLAN, collision: true, existing_size: 12282714727 }),
+  })
+  render(<Wizard api={api} torrent={BIG} onClose={vi.fn()} />)
+  expect(
+    await screen.findByText(
+      'Plex holds another version, 12,282,714,727 bytes. This release is 12,287,957,607 bytes. Sending replaces it.',
+    ),
+  ).toBeInTheDocument()
+})
+
+it('reports a torrent the server cannot transfer', async () => {
+  const api = fakeApi([one], {
+    createJob: vi.fn().mockRejectedValue(new Error('the seedbox reports no path for this torrent')),
+  })
+  render(<Wizard api={api} torrent={torrent} onClose={vi.fn()} />)
+  await screen.findByText('Some Movie (2024)')
+  await userEvent.click(screen.getByRole('button', { name: 'Start transfer' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('the seedbox reports no path for this torrent')
+})
+
 it('says a pack is added to a show that is already there', async () => {
   const series: Candidate = { ...one, kind: 'series' }
   const api = fakeApi([series], {

@@ -106,12 +106,31 @@ export type Collision = 'skip' | 'overwrite'
 export interface PlanResult {
   dest_path: string
   collision: boolean
+  /** The size of a file already at the destination. Absent before sb-ctrl 0.9.0. */
+  existing_size?: number
 }
 
 export interface CreateJobResult {
   job_id?: string
   skipped?: boolean
   dest_path?: string
+  /** As in `PlanResult`. Absent before sb-ctrl 0.9.0. */
+  existing_size?: number
+}
+
+/**
+ * What replacing a file in the way does: the same release again, or another version.
+ * Empty when the server reports no size, so the caller keeps its general warning.
+ */
+export function replaceNote(existing: number | undefined, size: number): string {
+  if (existing === undefined) return ''
+  if (existing === size) {
+    return `Plex holds this file already, ${humanSize(existing)}. Sending again replaces it with the same file.`
+  }
+  // Two versions can round to one size, so then the bytes tell them apart.
+  const exact = humanSize(existing) === humanSize(size)
+  const show = (bytes: number) => (exact ? `${bytes.toLocaleString('en-US')} bytes` : humanSize(bytes))
+  return `Plex holds another version, ${show(existing)}. This release is ${show(size)}. Sending replaces it.`
 }
 
 /** A series pack merges into the show folder; anything else replaces what is there. */

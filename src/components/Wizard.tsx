@@ -4,6 +4,7 @@ import {
   candidateName,
   humanSize,
   mergesIntoDestination,
+  replaceNote,
   type Candidate,
   type Collision,
   type PlanResult,
@@ -47,12 +48,12 @@ function Match({ candidate }: Readonly<{ candidate: Candidate }>) {
 }
 
 /** Where this lands, and what it does to whatever is there already. */
-function Destination({ plan, kind }: Readonly<{ plan: PlanResult; kind: string }>) {
+function Destination({ plan, kind, size }: Readonly<{ plan: PlanResult; kind: string; size: number }>) {
   let note = ''
   if (plan.collision) {
     note = mergesIntoDestination(kind)
       ? 'The show is already there; the pack adds to it.'
-      : 'This replaces what is there.'
+      : replaceNote(plan.existing_size, size) || 'This replaces what is there.'
   }
   return (
     <div className="mt-3 small text-body-secondary">
@@ -68,9 +69,10 @@ function Destination({ plan, kind }: Readonly<{ plan: PlanResult; kind: string }
 function Occupied({
   kind,
   dest,
+  note,
   onConfirm,
   onBack,
-}: Readonly<{ kind: string; dest: string; onConfirm: () => void; onBack: () => void }>) {
+}: Readonly<{ kind: string; dest: string; note: string; onConfirm: () => void; onBack: () => void }>) {
   const merges = mergesIntoDestination(kind)
   return (
     <div>
@@ -82,7 +84,7 @@ function Occupied({
         <p className="mb-0">
           {merges
             ? 'Continuing adds the episodes of this pack and replaces the ones it repeats.'
-            : 'Continuing replaces what is there.'}
+            : note || 'Continuing replaces what is there.'}
         </p>
       </div>
       <div className="d-flex gap-2">
@@ -106,7 +108,8 @@ export function Wizard({ api, torrent, onClose }: Readonly<{ api: Api; torrent: 
   const [plan, setPlan] = useState<PlanResult | null>(null)
   const [error, setError] = useState('')
   const [started, setStarted] = useState('')
-  const [occupied, setOccupied] = useState<string | null>(null)
+  // The destination the server found taken, and what replacing it does.
+  const [occupied, setOccupied] = useState<{ dest: string; note: string } | null>(null)
   const [busy, setBusy] = useState(false)
   // an answer that arrives after the dialog is gone has nothing to update
   const alive = useRef(true)
@@ -176,7 +179,7 @@ export function Wizard({ api, torrent, onClose }: Readonly<{ api: Api; torrent: 
     try {
       const result = await api.createJob(torrent.hash, kind, name, collision)
       if (result.skipped) {
-        setOccupied(result.dest_path ?? '')
+        setOccupied({ dest: result.dest_path ?? '', note: replaceNote(result.existing_size, torrent.size) })
         return
       }
       setOccupied(null)
@@ -228,7 +231,15 @@ export function Wizard({ api, torrent, onClose }: Readonly<{ api: Api; torrent: 
   if (started) {
     body = <output className="alert alert-success d-block">Transfer started: {started}</output>
   } else if (occupied !== null) {
-    body = <Occupied kind={kind} dest={occupied} onConfirm={() => start('overwrite')} onBack={() => setOccupied(null)} />
+    body = (
+      <Occupied
+        kind={kind}
+        dest={occupied.dest}
+        note={occupied.note}
+        onConfirm={() => start('overwrite')}
+        onBack={() => setOccupied(null)}
+      />
+    )
   } else {
     body = (
       <>
@@ -273,7 +284,7 @@ export function Wizard({ api, torrent, onClose }: Readonly<{ api: Api; torrent: 
             </select>
           </div>
         </div>
-        {plan && <Destination plan={plan} kind={kind} />}
+        {plan && <Destination plan={plan} kind={kind} size={torrent.size} />}
       </>
     )
   }
