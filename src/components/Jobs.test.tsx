@@ -148,6 +148,48 @@ it('ignores the error of an action a later action replaced', async () => {
   expect(screen.queryByRole('alert')).toBeNull()
 })
 
+it('keeps the log of the last Log click when an earlier one answers later', async () => {
+  let resolveFirst: (r: { log: string }) => void = () => undefined
+  const jobs: Job[] = [
+    { id: 'JA', name: 'First', state: 'failed', error: 'died' },
+    { id: 'JB', name: 'Second', state: 'failed', error: 'died' },
+  ]
+  const api = {
+    jobs: vi.fn().mockResolvedValue({ jobs }),
+    jobLog: vi
+      .fn()
+      .mockReturnValueOnce(new Promise((resolve) => (resolveFirst = resolve)))
+      .mockResolvedValue({ log: 'log of second' }),
+  } as unknown as Api
+  render(<Jobs api={api} />)
+  const [first, second] = await screen.findAllByRole('button', { name: 'Log' })
+  await userEvent.click(first)
+  await userEvent.click(second)
+  expect(await screen.findByText('log of second')).toBeInTheDocument()
+  await act(async () => resolveFirst({ log: 'log of first' }))
+  expect(screen.queryByText('log of first')).toBeNull()
+  expect(screen.getByText('log of second')).toBeInTheDocument()
+})
+
+it('keeps the error of an action when the poll fails', async () => {
+  vi.useFakeTimers({ shouldAdvanceTime: true })
+  try {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    const jobs: Job[] = [{ id: 'JC', name: 'Gone', state: 'failed', error: 'died' }]
+    const api = {
+      jobs: vi.fn().mockResolvedValueOnce({ jobs }).mockRejectedValue(new Error('poll down')),
+      retry: vi.fn().mockRejectedValue(new Error('no such job')),
+    } as unknown as Api
+    render(<Jobs api={api} />)
+    await user.click(await screen.findByRole('button', { name: 'Retry' }))
+    await act(() => vi.advanceTimersByTimeAsync(3500))
+    const alerts = screen.getAllByRole('alert').map((a) => a.textContent)
+    expect(alerts).toEqual(['no such job', 'poll down'])
+  } finally {
+    vi.useRealTimers()
+  }
+})
+
 it('shows what a finished job transferred', async () => {
   const jobs: Job[] = [
     {

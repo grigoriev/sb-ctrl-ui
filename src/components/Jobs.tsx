@@ -30,7 +30,7 @@ export function Jobs({ api }: Readonly<{ api: Api }>) {
   const [error, setError] = useState('')
   // The error of Retry, Log or Delete. The poll does not clear it, the next of these or Close does.
   const [actionError, setActionError] = useState('')
-  // Counts the requests, so a late error of a replaced request does not show.
+  // Counts the requests, so a late answer of a replaced request does not show.
   const lastAction = useRef(0)
   const [log, setLog] = useState<{ id: string; text: string } | null>(null)
 
@@ -50,12 +50,17 @@ export function Jobs({ api }: Readonly<{ api: Api }>) {
     return () => clearInterval(id)
   }, [load])
 
-  /** Runs the request of Retry, Log or Delete, then `done`. Its error stays until the next one. */
-  const act = (request: Promise<unknown>, done?: () => void) => {
+  /**
+   * Runs the request of Retry, Log or Delete, then `done` with its answer. Its error stays until
+   * the next one. A request a later one replaced does nothing when it answers.
+   */
+  const act = <T,>(request: Promise<T>, done?: (answer: T) => void) => {
     const action = ++lastAction.current
     setActionError('')
     request.then(
-      () => done?.(),
+      (answer) => {
+        if (action === lastAction.current) done?.(answer)
+      },
       (e: Error) => {
         if (action === lastAction.current) setActionError(e.message)
       },
@@ -132,7 +137,7 @@ export function Jobs({ api }: Readonly<{ api: Api }>) {
                 onClick={() =>
                   log?.id === j.id
                     ? setLog(null)
-                    : act(api.jobLog(j.id).then((r) => setLog({ id: j.id, text: r.log })))
+                    : act(api.jobLog(j.id), (r) => setLog({ id: j.id, text: r.log }))
                 }
               >
                 {log?.id === j.id ? 'Hide log' : 'Log'}
