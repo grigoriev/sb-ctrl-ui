@@ -34,6 +34,8 @@ The header names both builds, `ui <version> · api <version>`: the UI version
 is baked in from package.json, the API version comes from `GET /health`.
 
 - **Jobs**: transfer jobs with state / progress / ETA; retry a failed one.
+  A refused Retry, Log or Delete shows its error above the list. It stays
+  until the next of these requests or **Close**.
 - **Sign in**: shown when the API reports `login_required`. The session lives in
   an HttpOnly cookie the server sets, so the browser stores no credentials.
 ## Configuration
