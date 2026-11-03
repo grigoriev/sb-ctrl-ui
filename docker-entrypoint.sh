@@ -41,6 +41,10 @@ OUT=/out
 # put <source> <target>: writes a temporary file next to the target, then
 # renames it. The target is the old file or the new one, never a partial one.
 put() {
+  if [ -d "$2" ]; then
+    echo "sb-ctrl-ui: $2 is a directory, remove it from the volume" >&2
+    return 1
+  fi
   cp "$1" "$2.new"
   mv -f "$2.new" "$2"
 }
@@ -53,13 +57,14 @@ done
   put "/srv/$f" "$OUT/$f"
 done
 
-# 2. Replace config.js, then index.html, which switches the page to this build.
+# 2. Write config.js aside, replace index.html, which switches the page to this
+#    build, then config.js. A failed step keeps the earlier page and settings.
 {
   printf 'window.SB_API_BASE=%s;\n' "$(js_string SB_API_BASE)"
   printf 'window.SB_API_TOKEN=%s;\n' "$(js_string SB_API_TOKEN)"
 } > "$OUT/config.js.new"
-mv -f "$OUT/config.js.new" "$OUT/config.js"
 put /srv/index.html "$OUT/index.html"
+mv -f "$OUT/config.js.new" "$OUT/config.js"
 
 # 3. Remove what the earlier build left and this one does not ship.
 find "$OUT" -mindepth 1 -depth | while IFS= read -r f; do

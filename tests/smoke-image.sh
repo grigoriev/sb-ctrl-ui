@@ -113,6 +113,27 @@ docker run --rm ${platform[@]+"${platform[@]}"} \
 esac
 pass "a run on a full disk keeps the files of the served build whole"
 
+# A directory where this build ships a file fails the run. Otherwise mv puts
+# the file into the directory, and the cleanup removes it.
+in_volume sh -c 'rm /out/favicon.svg && mkdir /out/favicon.svg' \
+  || fail "cannot prepare the directory run"
+if deploy >/dev/null 2>&1; then
+  fail "a run with a directory in place of a file exits with 0"
+fi
+in_volume rmdir /out/favicon.svg || fail "cannot remove the favicon directory"
+pass "a run with a directory in place of a file fails"
+
+# A run that cannot replace index.html keeps the earlier config.js, so the
+# earlier page keeps the settings it was deployed with.
+in_volume sh -c 'echo old-config > /out/config.js && rm /out/index.html && mkdir /out/index.html' \
+  || fail "cannot prepare the index.html run"
+if deploy >/dev/null 2>&1; then
+  fail "a run that cannot replace index.html exits with 0"
+fi
+check_file "a run that cannot replace index.html keeps config.js" config.js old-config
+in_volume rmdir /out/index.html || fail "cannot remove the index.html directory"
+deploy >/dev/null 2>&1 || fail "the run after the index.html run did not exit with 0"
+
 uid="$(docker image inspect -f '{{.Config.User}}' "$IMAGE")"
 case "$uid" in
   '' | 0 | 0:* | root | root:*) fail "the image runs as root" ;;
