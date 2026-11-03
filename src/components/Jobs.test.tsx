@@ -109,6 +109,45 @@ it('keeps the error of an action through the next poll until closed', async () =
   }
 })
 
+it('keeps the error of an action when the poll finds no jobs left', async () => {
+  vi.useFakeTimers({ shouldAdvanceTime: true })
+  try {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    const jobs: Job[] = [{ id: 'J8', name: 'Last', state: 'failed', error: 'died' }]
+    const api = {
+      jobs: vi.fn().mockResolvedValueOnce({ jobs }).mockResolvedValue({ jobs: [] }),
+      retry: vi.fn().mockRejectedValue(new Error('no such job')),
+    } as unknown as Api
+    render(<Jobs api={api} />)
+    await user.click(await screen.findByRole('button', { name: 'Retry' }))
+    await act(() => vi.advanceTimersByTimeAsync(3500))
+    expect(screen.getByText('No transfers')).toBeInTheDocument()
+    expect(screen.getByRole('alert')).toHaveTextContent('no such job')
+  } finally {
+    vi.useRealTimers()
+  }
+})
+
+it('ignores the error of an action a later action replaced', async () => {
+  let rejectFirst: (e: Error) => void = () => undefined
+  const jobs: Job[] = [
+    { id: 'JA', name: 'First', state: 'failed', error: 'died' },
+    { id: 'JB', name: 'Second', state: 'failed', error: 'died' },
+  ]
+  const api = {
+    jobs: vi.fn().mockResolvedValue({ jobs }),
+    deleteJob: vi
+      .fn()
+      .mockReturnValueOnce(new Promise((_, reject) => (rejectFirst = reject)))
+      .mockResolvedValue({ deleted: 'JB' }),
+  } as unknown as Api
+  render(<Jobs api={api} />)
+  await userEvent.click(await screen.findByRole('button', { name: 'Delete First' }))
+  await userEvent.click(screen.getByRole('button', { name: 'Delete Second' }))
+  await act(async () => rejectFirst(new Error('stale')))
+  expect(screen.queryByRole('alert')).toBeNull()
+})
+
 it('shows what a finished job transferred', async () => {
   const jobs: Job[] = [
     {
