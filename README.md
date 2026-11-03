@@ -27,7 +27,8 @@ container environment, never from the code or the browser.
   and one button opens the dialog: the TMDb description, the destination the
   transfer lands in, and a warning when something is there already. For a file
   in the way, the warning says whether it is the same release or another version,
-  by size. Replacing it is still allowed. TMDb only
+  by size, with sb-ctrl 0.9.0 or later. Older servers show the general warning.
+  Replacing it is still allowed. TMDb only
   proposes: the search query, the name in the library and the library itself
   are all editable, and the destination line follows them. Nothing leaves
   until **Start transfer**. A running transfer shows its percent, rate

@@ -13,8 +13,8 @@ Releases before 0.6.1 are listed on the
 
 - The wizard tells the same release from another version when a file is in the
   way. It compares the size the server reports with the size of the torrent, and
-  still offers Replace. It needs sb-ctrl with `existing_size`, and shows the
-  earlier warning without it.
+  still offers Replace. Sizes that round to the same value show in bytes. It needs
+  sb-ctrl 0.9.0 or later, and shows the earlier warning with an older one.
 
 ### Fixed
 

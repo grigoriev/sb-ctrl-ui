@@ -127,7 +127,10 @@ export function replaceNote(existing: number | undefined, size: number): string 
   if (existing === size) {
     return `Plex holds this file already, ${humanSize(existing)}. Sending again replaces it with the same file.`
   }
-  return `Plex holds another version, ${humanSize(existing)}. This release is ${humanSize(size)}. Sending replaces it.`
+  // Two versions can round to one size, so then the bytes tell them apart.
+  const exact = humanSize(existing) === humanSize(size)
+  const show = (bytes: number) => (exact ? `${bytes.toLocaleString('en-US')} bytes` : humanSize(bytes))
+  return `Plex holds another version, ${show(existing)}. This release is ${show(size)}. Sending replaces it.`
 }
 
 /** A series pack merges into the show folder; anything else replaces what is there. */

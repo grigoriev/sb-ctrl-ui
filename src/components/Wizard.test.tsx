@@ -95,6 +95,18 @@ it.each([
   expect(screen.getByRole('button', { name: 'Replace' })).toBeInTheDocument()
 })
 
+it('shows the bytes when two versions round to the same size', async () => {
+  const api = fakeApi([one], {
+    plan: vi.fn().mockResolvedValue({ ...PLAN, collision: true, existing_size: 12282714727 }),
+  })
+  render(<Wizard api={api} torrent={BIG} onClose={vi.fn()} />)
+  expect(
+    await screen.findByText(
+      'Plex holds another version, 12,282,714,727 bytes. This release is 12,287,957,607 bytes. Sending replaces it.',
+    ),
+  ).toBeInTheDocument()
+})
+
 it('reports a torrent the server cannot transfer', async () => {
   const api = fakeApi([one], {
     createJob: vi.fn().mockRejectedValue(new Error('the seedbox reports no path for this torrent')),
