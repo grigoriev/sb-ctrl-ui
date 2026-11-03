@@ -94,6 +94,25 @@ in_volume chmod 755 /out/assets || fail "cannot restore the assets directory"
 deploy >/dev/null 2>&1 || fail "the run after a failed one did not exit with 0"
 check_file "the run after a failed one copies index.html" index.html '<title>sb-ctrl</title>'
 
+# A run on a full disk must not leave a file of the earlier build half written.
+# The earlier build is this one with a small favicon. The new favicon needs
+# more space than the old one frees, so an in-place copy stops in the middle.
+docker run --rm ${platform[@]+"${platform[@]}"} \
+  --mount type=tmpfs,destination=/out,tmpfs-size=1m,tmpfs-mode=1777 \
+  --entrypoint sh "$IMAGE" -c '
+    cp -R /srv/. /out/ && echo old-favicon > /out/favicon.svg || exit 10
+    dd if=/dev/zero of=/out/fill bs=4k 2>/dev/null
+    docker-entrypoint.sh >/dev/null 2>&1 && exit 11
+    for f in /out/favicon.svg $(grep -o "/assets/[^\"]*" /out/index.html); do
+      [ "$f" = /out/favicon.svg ] || f="/out$f"
+      [ "$(cat "$f")" = old-favicon ] || cmp -s "$f" "/srv${f#/out}" || exit 12
+    done' || case "$?" in
+  10) fail "cannot prepare the full disk run" ;;
+  11) fail "a run on a full disk exits with 0" ;;
+  *) fail "a run on a full disk leaves a file of the served build half written" ;;
+esac
+pass "a run on a full disk keeps the files of the served build whole"
+
 uid="$(docker image inspect -f '{{.Config.User}}' "$IMAGE")"
 case "$uid" in
   '' | 0 | 0:* | root | root:*) fail "the image runs as root" ;;

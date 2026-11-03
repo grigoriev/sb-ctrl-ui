@@ -38,21 +38,28 @@ OUT=/out
 # exits before index.html changes, and the earlier index.html names only its
 # own assets.
 #
+# put <source> <target>: writes a temporary file next to the target, then
+# renames it. The target is the old file or the new one, never a partial one.
+put() {
+  cp "$1" "$2.new"
+  mv -f "$2.new" "$2"
+}
+
 # 1. Copy all but index.html. Asset names carry a hash, so they do not collide.
-for f in /srv/* /srv/.[!.]*; do
-  [ -e "$f" ] || continue
-  [ "$f" = /srv/index.html ] && continue
-  cp -R "$f" "$OUT/"
+(cd /srv && find . -type d) | while IFS= read -r d; do
+  mkdir -p "$OUT/$d"
+done
+(cd /srv && find . -type f ! -path ./index.html) | while IFS= read -r f; do
+  put "/srv/$f" "$OUT/$f"
 done
 
-# 2. Replace config.js and index.html, each with one rename.
+# 2. Replace config.js, then index.html, which switches the page to this build.
 {
   printf 'window.SB_API_BASE=%s;\n' "$(js_string SB_API_BASE)"
   printf 'window.SB_API_TOKEN=%s;\n' "$(js_string SB_API_TOKEN)"
-} > "$OUT/.config.js.new"
-mv -f "$OUT/.config.js.new" "$OUT/config.js"
-cp /srv/index.html "$OUT/.index.html.new"
-mv -f "$OUT/.index.html.new" "$OUT/index.html"
+} > "$OUT/config.js.new"
+mv -f "$OUT/config.js.new" "$OUT/config.js"
+put /srv/index.html "$OUT/index.html"
 
 # 3. Remove what the earlier build left and this one does not ship.
 find "$OUT" -mindepth 1 -depth | while IFS= read -r f; do
