@@ -38,8 +38,11 @@ is baked in from package.json, the API version comes from `GET /health`.
   an HttpOnly cookie the server sets, so the browser stores no credentials.
 ## Configuration
 
-The built app is static, so its entrypoint writes `/config.js` from the
-environment before Caddy starts.
+The image holds no web server. Run it once on a volume: it copies the app
+to `/out`, writes `/out/config.js` from the environment, and exits. The proxy
+serves the volume, with a fallback to `index.html` for client routes.
+The image runs as UID 65534. A new named volume takes that owner from the image.
+A bind mount must be writable for it.
 
 | Variable | Default | Meaning |
 |----------|---------|---------|

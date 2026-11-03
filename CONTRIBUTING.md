@@ -11,7 +11,7 @@ npm run typecheck                       # tsc -b
 npm test                                # vitest with coverage
 npm run build                           # production build to dist/
 docker build -t sb-ctrl-ui:test .       # build the image
-tests/smoke-image.sh sb-ctrl-ui:test    # start the image and check what Caddy serves
+tests/smoke-image.sh sb-ctrl-ui:test    # run the image on a volume and check its files
 ```
 
 On an ARM machine, build with `--platform linux/amd64`; the smoke test then runs the image on

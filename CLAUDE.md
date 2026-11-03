@@ -5,8 +5,9 @@ This file guides Claude Code when it works on or reviews this repository.
 ## Project Overview
 
 sb-ctrl-ui is the React web UI for the `sb-ctrl` seedbox to Plex backend. It lists completed
-torrents, sends a title to Plex through a TMDb wizard, and shows transfer jobs. The image serves
-the static build with Caddy. `sb-stack` runs it behind a TLS proxy, with the API under `/api`.
+torrents, sends a title to Plex through a TMDb wizard, and shows transfer jobs. The image holds the
+static build only. It copies it to a volume and exits. The TLS proxy of `sb-stack` serves the volume,
+with the API under `/api`.
 
 ## Tech Stack
 
@@ -14,7 +15,7 @@ the static build with Caddy. `sb-stack` runs it behind a TLS proxy, with the API
 - **Build**: Vite 8, Node.js 24 (`engines` in `package.json`)
 - **Lint**: oxlint (`.oxlintrc.json`)
 - **Tests**: Vitest 5 with jsdom, Testing Library, v8 coverage
-- **Image**: Node build stage, then a Caddy rebuilt from source, all bases pinned by digest
+- **Image**: Node build stage, then BusyBox with the files only, as UID 65534. Bases pinned by digest
 
 ## Common Commands
 
@@ -26,7 +27,7 @@ npm run typecheck                       # tsc -b
 npm test                                # vitest with coverage
 npm run build                           # production build to dist/
 docker build -t sb-ctrl-ui:test .       # build the image
-tests/smoke-image.sh sb-ctrl-ui:test    # start the image and check what Caddy serves
+tests/smoke-image.sh sb-ctrl-ui:test    # run the image on a volume and check its files
 ```
 
 ## Architecture
@@ -36,8 +37,8 @@ tests/smoke-image.sh sb-ctrl-ui:test    # start the image and check what Caddy s
 - `src/components/`: `Torrents`, `Wizard`, `Jobs`, `Login`, `Ring`. Each has a `*.test.tsx`
 - `src/theme.ts`: mirrors the OS color scheme onto Bootstrap `data-bs-theme`
 - `src/test/setup.ts`: jest-dom matchers and an in-memory `localStorage`
-- `docker-entrypoint.sh`: writes `/srv/config.js` from `SB_API_BASE` and `SB_API_TOKEN`
-- `Caddyfile`: plain HTTP on `:80`, gzip, single-page fallback to `index.html`
+- `docker-entrypoint.sh`: copies `/srv` to the `/out` volume, writes `/out/config.js` from
+  `SB_API_BASE` and `SB_API_TOKEN`, and exits. No server runs in the image
 - `index.html` loads `/config.js` before the bundle. `__UI_VERSION__` comes from `package.json`
 
 Vitest reads `vitest.config.ts`, which sets 100% coverage thresholds. `vite.config.ts` holds the
@@ -66,7 +67,7 @@ Flag these in a pull request:
 - Polling without cleanup on unmount (`Torrents` polls the job list every 3 s)
 - Missing or weakened tests. Coverage gates are strict
 - New runtime dependencies. The runtime set is React, React DOM and Bootstrap
-- An unpinned base image or a changed Go module pin in the `Dockerfile` without reason
+- An unpinned base image in the `Dockerfile`, or a web server or `USER root` added to the image
 - No `## [Unreleased]` entry in `CHANGELOG.md`, or README not updated for a behavior change
 - Workflow changes without SHA-pinned actions, `persist-credentials: false`, or `timeout-minutes`
 

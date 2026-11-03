@@ -14,9 +14,9 @@ Only the latest release gets fixes, and with it the image `ghcr.io/grigoriev/sb-
 
 ## Scope
 
-The code in `src/`, the Dockerfile, the Caddyfile, the entrypoint, the scripts and the workflows
+The code in `src/`, the Dockerfile, the entrypoint, the scripts and the workflows
 belong to this repository.
 
-Vulnerabilities in upstream software (React, Bootstrap and the other npm packages, Caddy, Node.js
+Vulnerabilities in upstream software (React, Bootstrap and the other npm packages, BusyBox, Node.js
 and the base images) belong to the upstream project. Tell us as well if this project is affected,
 so we can release a fix when the upstream fix is out.
