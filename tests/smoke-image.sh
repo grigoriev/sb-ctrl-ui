@@ -82,6 +82,18 @@ if in_volume test -e /out/stale.js; then
 fi
 pass "a new run removes the files of an earlier run"
 
+# A run that cannot copy keeps the earlier build served. A read-only assets
+# directory makes the copy fail.
+in_volume sh -c 'echo old-build > /out/index.html && chmod 555 /out/assets' \
+  || fail "cannot prepare the failing run"
+if deploy >/dev/null 2>&1; then
+  fail "a run that cannot copy exits with 0"
+fi
+check_file "a failed run keeps the earlier index.html" index.html old-build
+in_volume chmod 755 /out/assets || fail "cannot restore the assets directory"
+deploy >/dev/null 2>&1 || fail "the run after a failed one did not exit with 0"
+check_file "the run after a failed one copies index.html" index.html '<title>sb-ctrl</title>'
+
 uid="$(docker image inspect -f '{{.Config.User}}' "$IMAGE")"
 case "$uid" in
   '' | 0 | 0:* | root | root:*) fail "the image runs as root" ;;

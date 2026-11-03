@@ -34,13 +34,31 @@ js_string() {
 
 OUT=/out
 
-# Drop the files of the previous version, then copy this one.
-find "$OUT" -mindepth 1 -delete
-cp -R /srv/. "$OUT/"
+# The earlier build stays served until this one is complete. A failed step
+# exits before index.html changes, and the earlier index.html names only its
+# own assets.
+#
+# 1. Copy all but index.html. Asset names carry a hash, so they do not collide.
+for f in /srv/* /srv/.[!.]*; do
+  [ -e "$f" ] || continue
+  [ "$f" = /srv/index.html ] && continue
+  cp -R "$f" "$OUT/"
+done
 
+# 2. Replace config.js and index.html, each with one rename.
 {
   printf 'window.SB_API_BASE=%s;\n' "$(js_string SB_API_BASE)"
   printf 'window.SB_API_TOKEN=%s;\n' "$(js_string SB_API_TOKEN)"
-} > "$OUT/config.js"
+} > "$OUT/.config.js.new"
+mv -f "$OUT/.config.js.new" "$OUT/config.js"
+cp /srv/index.html "$OUT/.index.html.new"
+mv -f "$OUT/.index.html.new" "$OUT/index.html"
+
+# 3. Remove what the earlier build left and this one does not ship.
+find "$OUT" -mindepth 1 -depth | while IFS= read -r f; do
+  rel="${f#"$OUT"/}"
+  [ "$rel" = config.js ] && continue
+  [ -e "/srv/$rel" ] || rm -rf "$f"
+done
 
 echo "sb-ctrl-ui: copied the app to $OUT"
