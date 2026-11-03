@@ -38,13 +38,19 @@ OUT=/out
 # exits before index.html changes, and the earlier index.html names only its
 # own assets.
 #
+# not_dir <path>: fails when the path is a directory. mv would move a file
+# into it instead of replacing it.
+not_dir() {
+  if [ -d "$1" ]; then
+    echo "sb-ctrl-ui: $1 is a directory, remove it from the volume" >&2
+    return 1
+  fi
+}
+
 # put <source> <target>: writes a temporary file next to the target, then
 # renames it. The target is the old file or the new one, never a partial one.
 put() {
-  if [ -d "$2" ]; then
-    echo "sb-ctrl-ui: $2 is a directory, remove it from the volume" >&2
-    return 1
-  fi
+  not_dir "$2"
   cp "$1" "$2.new"
   mv -f "$2.new" "$2"
 }
@@ -63,6 +69,7 @@ done
   printf 'window.SB_API_BASE=%s;\n' "$(js_string SB_API_BASE)"
   printf 'window.SB_API_TOKEN=%s;\n' "$(js_string SB_API_TOKEN)"
 } > "$OUT/config.js.new"
+not_dir "$OUT/config.js"
 put /srv/index.html "$OUT/index.html"
 mv -f "$OUT/config.js.new" "$OUT/config.js"
 

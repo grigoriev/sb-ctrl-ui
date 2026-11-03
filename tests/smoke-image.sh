@@ -126,6 +126,15 @@ fi
 in_volume rmdir /out/favicon.svg || fail "cannot remove the favicon directory"
 pass "a run with a directory in place of a file fails"
 
+# The same holds for config.js, which the entrypoint writes itself.
+in_volume sh -c 'rm /out/config.js && mkdir /out/config.js' \
+  || fail "cannot prepare the config.js directory run"
+if deploy >/dev/null 2>&1; then
+  fail "a run with a directory in place of config.js exits with 0"
+fi
+in_volume rm -r /out/config.js || fail "cannot remove the config.js directory"
+pass "a run with a directory in place of config.js fails"
+
 # A run that cannot replace index.html keeps the earlier config.js, so the
 # earlier page keeps the settings it was deployed with.
 in_volume sh -c 'echo old-config > /out/config.js && rm /out/index.html && mkdir /out/index.html' \
