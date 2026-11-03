@@ -73,6 +73,18 @@ it('reports a refused delete', async () => {
   expect(await screen.findByRole('alert')).toHaveTextContent('job is running')
 })
 
+it('reports a failed retry', async () => {
+  const jobs: Job[] = [{ id: 'J6', name: 'Gone', state: 'failed', error: 'died' }]
+  const api = {
+    jobs: vi.fn().mockResolvedValue({ jobs }),
+    retry: vi.fn().mockRejectedValue(new Error('no such job')),
+  } as unknown as Api
+  render(<Jobs api={api} />)
+  await userEvent.click(await screen.findByRole('button', { name: 'Retry' }))
+  expect(api.retry).toHaveBeenCalledWith('J6')
+  expect(await screen.findByRole('alert')).toHaveTextContent('no such job')
+})
+
 it('shows what a finished job transferred', async () => {
   const jobs: Job[] = [
     {

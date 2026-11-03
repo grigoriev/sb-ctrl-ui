@@ -9,6 +9,11 @@ Releases before 0.6.1 are listed on the
 
 ## [Unreleased]
 
+### Fixed
+
+- A failed Retry in the jobs view shows the error, as Log and Delete do. It
+  failed without a message before, for example for a job deleted elsewhere.
+
 ## [0.7.0] - 2026-11-03
 
 ### Changed

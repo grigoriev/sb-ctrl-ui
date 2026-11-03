@@ -93,7 +93,7 @@ export function Jobs({ api }: Readonly<{ api: Api }>) {
                 <button
                   type="button"
                   className="btn btn-sm btn-outline-secondary"
-                  onClick={() => api.retry(j.id).then(load)}
+                  onClick={() => api.retry(j.id).then(load, (e: Error) => setError(e.message))}
                 >
                   Retry
                 </button>
